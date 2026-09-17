@@ -171,7 +171,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Brand Header with Collapse Controls */}
       <div className="p-4 flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800/80">
         <div className="flex items-center gap-2.5 min-w-0">
-          <img src="src/asset/MEMO.png" alt="memo" className="w-10 h-10" />
+          <img src="./public/asset/MEMO.png" alt="memo" className="w-10 h-10" />
           <div className="min-w-0">
             <span className="font-bold text-neutral-900 dark:text-white text-base tracking-tight font-sans block leading-none truncate">
               MemoFlow
