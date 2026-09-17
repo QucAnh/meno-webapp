@@ -1,14 +1,14 @@
-import React from 'react';
-import { Trash2, AlertTriangle, X, FolderX } from 'lucide-react';
+import React from "react";
+import { Trash2, AlertTriangle, X, FolderX } from "lucide-react";
 
 export type DeleteTarget =
   | {
-      type: 'note';
+      type: "note";
       id: string;
       title: string;
     }
   | {
-      type: 'folder';
+      type: "folder";
       name: string;
       notesCount: number;
     }
@@ -51,7 +51,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
         <div className="p-5 flex items-start justify-between gap-3 border-b border-neutral-100 bg-neutral-50/50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
-              {target.type === 'note' ? (
+              {target.type === "note" ? (
                 <Trash2 className="w-5 h-5" />
               ) : (
                 <FolderX className="w-5 h-5" />
@@ -59,12 +59,12 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-semibold text-neutral-900 leading-tight">
-                {target.type === 'note' ? 'Delete Note' : 'Delete Folder'}
+                {target.type === "note" ? "Delete Note" : "Delete Folder"}
               </h3>
               <p className="text-xs text-neutral-500 mt-0.5">
-                {target.type === 'note'
-                  ? 'This action cannot be undone'
-                  : 'Remove folder categorization'}
+                {target.type === "note"
+                  ? "This action cannot be undone"
+                  : "Remove folder categorization"}
               </p>
             </div>
           </div>
@@ -81,38 +81,50 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
 
         {/* Content Body */}
         <div className="p-5 text-sm text-neutral-600 space-y-3">
-          {target.type === 'note' ? (
+          {target.type === "note" ? (
             <div>
               <p className="leading-relaxed">
-                Are you sure you want to permanently delete{' '}
+                Are you sure you want to permanently delete{" "}
                 <span className="font-semibold text-neutral-900 break-all">
-                  &ldquo;{target.title || 'Untitled Note'}&rdquo;
+                  &ldquo;{target.title || "Untitled Note"}&rdquo;
                 </span>
                 ?
               </p>
               <div className="mt-3 flex items-center gap-2 p-2.5 rounded-lg bg-rose-50/80 border border-rose-100 text-xs text-rose-700">
                 <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
-                <span>The note and its revision history will be permanently erased.</span>
+                <span>
+                  The note and its revision history will be permanently erased.
+                </span>
               </div>
             </div>
           ) : (
             <div>
               <p className="leading-relaxed">
-                Are you sure you want to delete the folder{' '}
-                <span className="font-semibold text-neutral-900">&ldquo;{target.name}&rdquo;</span>?
+                Are you sure you want to delete the folder{" "}
+                <span className="font-semibold text-neutral-900">
+                  &ldquo;{target.name}&rdquo;
+                </span>
+                ?
               </p>
               {target.notesCount > 0 ? (
                 <div className="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200/80 text-xs text-amber-800 space-y-1">
                   <div className="font-medium flex items-center gap-1.5">
-                    <span>📁 {target.notesCount} {target.notesCount === 1 ? 'note' : 'notes'} inside</span>
+                    <span>
+                      📁 {target.notesCount}{" "}
+                      {target.notesCount === 1 ? "note" : "notes"} inside
+                    </span>
                   </div>
                   <p className="text-amber-700 leading-normal">
-                    Don&apos;t worry: your notes will <strong>not be deleted</strong>. They will safely be moved to the <span className="font-semibold">General</span> folder.
+                    Don&apos;t worry: your notes will{" "}
+                    <strong>not be deleted</strong>. They will safely be moved
+                    to the <span className="font-semibold">General</span>{" "}
+                    folder.
                   </p>
                 </div>
               ) : (
                 <p className="text-xs text-neutral-500 mt-2">
-                  This folder is currently empty and will be removed from your sidebar.
+                  This folder is currently empty and will be removed from your
+                  sidebar.
                 </p>
               )}
             </div>
@@ -146,7 +158,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
               <>
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>
-                  {target.type === 'note' ? 'Delete Note' : 'Delete Folder'}
+                  {target.type === "note" ? "Delete Note" : "Delete Folder"}
                 </span>
               </>
             )}

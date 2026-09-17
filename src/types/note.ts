@@ -10,7 +10,7 @@ export interface Note {
   userId: string;
 }
 
-export type SyncStatus = 'saved' | 'saving' | 'offline' | 'error';
+export type SyncStatus = "saved" | "saving" | "offline" | "error";
 
 export type NoteFilter = {
   folder: string; // 'all' or specific folder name

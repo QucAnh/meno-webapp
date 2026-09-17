@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   User,
   onAuthStateChanged,
@@ -7,8 +7,8 @@ import {
   createUserWithEmailAndPassword,
   signInAnonymously,
   signOut,
-} from 'firebase/auth';
-import { auth, googleProvider } from '../firebaseConfig';
+} from "firebase/auth";
+import { auth, googleProvider } from "../firebaseConfig";
 
 interface AuthContextType {
   user: User | null;
@@ -24,7 +24,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,10 +39,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
       },
       (err) => {
-        console.error('Auth state error:', err);
+        console.error("Auth state error:", err);
         setError(err.message);
         setLoading(false);
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -53,12 +55,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err: any) {
-      console.error('Google Sign In Error:', err);
+      console.error("Google Sign In Error:", err);
       // Handle popup blocked or closed
-      if (err.code === 'auth/popup-closed-by-user') {
-        setError('Sign in popup was closed before completing.');
+      if (err.code === "auth/popup-closed-by-user") {
+        setError("Sign in popup was closed before completing.");
       } else {
-        setError(err.message || 'Failed to sign in with Google.');
+        setError(err.message || "Failed to sign in with Google.");
       }
       throw err;
     }
@@ -69,8 +71,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signInWithEmailAndPassword(auth, email, pass);
     } catch (err: any) {
-      console.error('Email Sign In Error:', err);
-      setError(err.message || 'Invalid email or password.');
+      console.error("Email Sign In Error:", err);
+      setError(err.message || "Invalid email or password.");
       throw err;
     }
   };
@@ -80,8 +82,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await createUserWithEmailAndPassword(auth, email, pass);
     } catch (err: any) {
-      console.error('Email Sign Up Error:', err);
-      setError(err.message || 'Failed to create account.');
+      console.error("Email Sign Up Error:", err);
+      setError(err.message || "Failed to create account.");
       throw err;
     }
   };
@@ -91,14 +93,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signInAnonymously(auth);
     } catch (err: any) {
-      console.warn('Anonymous Sign In note:', err);
-      if (err.code === 'auth/admin-restricted-operation') {
+      console.warn("Anonymous Sign In note:", err);
+      if (err.code === "auth/admin-restricted-operation") {
         const msg =
-          'Anonymous authentication is disabled in this Firebase project. Please sign in with Google or Email/Password.';
+          "Anonymous authentication is disabled in this Firebase project. Please sign in with Google or Email/Password.";
         setError(msg);
         throw new Error(msg);
       } else {
-        const msg = err.message || 'Failed to start guest session.';
+        const msg = err.message || "Failed to start guest session.";
         setError(msg);
         throw err;
       }
@@ -110,8 +112,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signOut(auth);
     } catch (err: any) {
-      console.error('Sign Out Error:', err);
-      setError(err.message || 'Failed to sign out.');
+      console.error("Sign Out Error:", err);
+      setError(err.message || "Failed to sign out.");
     }
   };
 
@@ -137,7 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

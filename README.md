@@ -32,17 +32,17 @@ Built with React, TypeScript, and Firebase, MemoFlow keeps your study workflow i
 
 ## Features
 
-| Category | What you get |
-|---|---|
-| 📝 **Notes** | Split-pane Markdown editor with live preview, debounced auto-save, and inline media uploads |
-| 🔄 **Real-Time Sync** | Changes save straight to Firestore, with offline support and `Saving…` / `Saved` status indicators |
-| 🗂️ **Organization** | Nested folder trees, subjects, tags, pinned notes, and full-text search |
-| 🧠 **Flashcards & SRS** | Deck-based flashcards with a spaced-repetition scheduler for review sessions |
-| ✅ **Tasks** | To-do lists linked directly to notes and study subjects |
-| ⚡ **Command Palette** | Keyboard-driven quick search and navigation across your workspace |
-| 🎨 **Customization** | Multiple themes and UI preferences |
-| 📤 **Export** | Export your workspace to Markdown, JSON, or PDF |
-| 🛡️ **Admin Dashboard** | Role-based access control, user management, system metrics, and storage tracking |
+| Category                | What you get                                                                                       |
+| ----------------------- | -------------------------------------------------------------------------------------------------- |
+| 📝 **Notes**            | Split-pane Markdown editor with live preview, debounced auto-save, and inline media uploads        |
+| 🔄 **Real-Time Sync**   | Changes save straight to Firestore, with offline support and `Saving…` / `Saved` status indicators |
+| 🗂️ **Organization**     | Nested folder trees, subjects, tags, pinned notes, and full-text search                            |
+| 🧠 **Flashcards & SRS** | Deck-based flashcards with a spaced-repetition scheduler for review sessions                       |
+| ✅ **Tasks**            | To-do lists linked directly to notes and study subjects                                            |
+| ⚡ **Command Palette**  | Keyboard-driven quick search and navigation across your workspace                                  |
+| 🎨 **Customization**    | Multiple themes and UI preferences                                                                 |
+| 📤 **Export**           | Export your workspace to Markdown, JSON, or PDF                                                    |
+| 🛡️ **Admin Dashboard**  | Role-based access control, user management, system metrics, and storage tracking                   |
 
 ---
 

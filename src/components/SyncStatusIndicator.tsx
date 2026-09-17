@@ -1,6 +1,6 @@
-import React from 'react';
-import { SyncStatus } from '../types/note';
-import { Check, Loader2, WifiOff, AlertCircle } from 'lucide-react';
+import React from "react";
+import { SyncStatus } from "../types/note";
+import { Check, Loader2, WifiOff, AlertCircle } from "lucide-react";
 
 interface SyncStatusIndicatorProps {
   status: SyncStatus;
@@ -13,7 +13,7 @@ export const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
   errorMessage,
   onRetry,
 }) => {
-  if (status === 'saving') {
+  if (status === "saving") {
     return (
       <div
         id="sync-status-saving"
@@ -26,7 +26,7 @@ export const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
     );
   }
 
-  if (status === 'offline') {
+  if (status === "offline") {
     return (
       <div
         id="sync-status-offline"
@@ -39,13 +39,13 @@ export const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
     );
   }
 
-  if (status === 'error') {
+  if (status === "error") {
     return (
       <div
         id="sync-status-error"
         onClick={onRetry}
         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200 cursor-pointer hover:bg-rose-100 transition-colors"
-        title={errorMessage || 'Error syncing to Firestore. Click to retry.'}
+        title={errorMessage || "Error syncing to Firestore. Click to retry."}
       >
         <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
         <span className="whitespace-nowrap">Sync Error</span>

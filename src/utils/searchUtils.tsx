@@ -1,5 +1,5 @@
-import React from 'react';
-import { Note } from '../types/note';
+import React from "react";
+import { Note } from "../types/note";
 
 export interface ParsedSearchQuery {
   raw: string;
@@ -22,7 +22,7 @@ export function parseSearchQuery(query: string): ParsedSearchQuery {
   const trimmed = query.trim();
   if (!trimmed) {
     return {
-      raw: '',
+      raw: "",
       tagTerms: [],
       folderTerms: [],
       keywordTerms: [],
@@ -59,13 +59,16 @@ export function parseSearchQuery(query: string): ParsedSearchQuery {
 
     // Pattern: tag:value or tags:value
     if (/^tags?:/i.test(token)) {
-      const val = token.replace(/^tags?:/i, '').trim().toLowerCase();
+      const val = token
+        .replace(/^tags?:/i, "")
+        .trim()
+        .toLowerCase();
       if (val) tagTerms.push(val);
       continue;
     }
 
     // Pattern: #tagname
-    if (token.startsWith('#') && token.length > 1) {
+    if (token.startsWith("#") && token.length > 1) {
       const val = token.slice(1).trim().toLowerCase();
       if (val) tagTerms.push(val);
       continue;
@@ -73,13 +76,16 @@ export function parseSearchQuery(query: string): ParsedSearchQuery {
 
     // Pattern: folder:value
     if (/^folder:/i.test(token)) {
-      const val = token.replace(/^folder:/i, '').trim().toLowerCase();
+      const val = token
+        .replace(/^folder:/i, "")
+        .trim()
+        .toLowerCase();
       if (val) folderTerms.push(val);
       continue;
     }
 
     // Pattern: @foldername
-    if (token.startsWith('@') && token.length > 1) {
+    if (token.startsWith("@") && token.length > 1) {
       const val = token.slice(1).trim().toLowerCase();
       if (val) folderTerms.push(val);
       continue;
@@ -96,7 +102,9 @@ export function parseSearchQuery(query: string): ParsedSearchQuery {
   const uniqueTags = Array.from(new Set(tagTerms));
   const uniqueFolders = Array.from(new Set(folderTerms));
   const uniqueKeywords = Array.from(new Set(keywordTerms));
-  const allTerms = Array.from(new Set([...uniqueTags, ...uniqueFolders, ...uniqueKeywords]));
+  const allTerms = Array.from(
+    new Set([...uniqueTags, ...uniqueFolders, ...uniqueKeywords]),
+  );
 
   return {
     raw: trimmed,
@@ -110,18 +118,21 @@ export function parseSearchQuery(query: string): ParsedSearchQuery {
 /**
  * Checks whether a note matches the parsed search query
  */
-export function matchesSearchQuery(note: Note, parsed: ParsedSearchQuery): boolean {
+export function matchesSearchQuery(
+  note: Note,
+  parsed: ParsedSearchQuery,
+): boolean {
   if (!parsed.raw) return true;
 
   const noteTagsLower = (note.tags || []).map((t) => t.toLowerCase());
-  const noteTitleLower = (note.title || '').toLowerCase();
-  const noteContentLower = (note.content || '').toLowerCase();
-  const noteFolderLower = (note.folder || '').toLowerCase();
+  const noteTitleLower = (note.title || "").toLowerCase();
+  const noteContentLower = (note.content || "").toLowerCase();
+  const noteFolderLower = (note.folder || "").toLowerCase();
 
   // 1. Tag criteria: every required tag must match at least one note tag
   for (const requiredTag of parsed.tagTerms) {
     const hasMatch = noteTagsLower.some(
-      (t) => t === requiredTag || t.includes(requiredTag)
+      (t) => t === requiredTag || t.includes(requiredTag),
     );
     if (!hasMatch) return false;
   }
@@ -152,7 +163,7 @@ export function matchesSearchQuery(note: Note, parsed: ParsedSearchQuery): boole
  * Escape regex special characters safely
  */
 function escapeRegex(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /**
@@ -160,7 +171,7 @@ function escapeRegex(str: string): string {
  */
 export function getHighlightedSegments(
   text: string,
-  terms: string[]
+  terms: string[],
 ): Array<{ text: string; isMatch: boolean }> {
   if (!text) return [];
   const validTerms = terms
@@ -172,7 +183,10 @@ export function getHighlightedSegments(
     return [{ text, isMatch: false }];
   }
 
-  const pattern = new RegExp(`(${validTerms.map(escapeRegex).join('|')})`, 'gi');
+  const pattern = new RegExp(
+    `(${validTerms.map(escapeRegex).join("|")})`,
+    "gi",
+  );
   const parts = text.split(pattern);
 
   return parts
@@ -186,25 +200,29 @@ export function getHighlightedSegments(
 /**
  * Smart excerpt generator that centers around the first matching search term
  */
-export function getSmartExcerpt(content: string, terms: string[], maxLength = 95): string {
-  if (!content) return 'Empty note...';
+export function getSmartExcerpt(
+  content: string,
+  terms: string[],
+  maxLength = 95,
+): string {
+  if (!content) return "Empty note...";
 
   // Strip markdown formatting for excerpt
   const clean = content
-    .replace(/^#+\s+/gm, '')
-    .replace(/(\*\*|__)(.*?)\1/g, '$2')
-    .replace(/(\*|_)(.*?)\1/g, '$2')
-    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
-    .replace(/`{1,3}[^`\n]*`{1,3}/g, '')
-    .replace(/>\s+/g, '')
-    .replace(/\n+/g, ' ')
+    .replace(/^#+\s+/gm, "")
+    .replace(/(\*\*|__)(.*?)\1/g, "$2")
+    .replace(/(\*|_)(.*?)\1/g, "$2")
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+    .replace(/`{1,3}[^`\n]*`{1,3}/g, "")
+    .replace(/>\s+/g, "")
+    .replace(/\n+/g, " ")
     .trim();
 
-  if (!clean) return 'Empty note...';
+  if (!clean) return "Empty note...";
 
   // If no terms or short text, standard truncation
   if (!terms || terms.length === 0 || clean.length <= maxLength) {
-    return clean.slice(0, maxLength) + (clean.length > maxLength ? '...' : '');
+    return clean.slice(0, maxLength) + (clean.length > maxLength ? "..." : "");
   }
 
   const cleanLower = clean.toLowerCase();
@@ -222,7 +240,7 @@ export function getSmartExcerpt(content: string, terms: string[], maxLength = 95
 
   // If match not in content or close to beginning, return start
   if (firstMatchIndex <= 30) {
-    return clean.slice(0, maxLength) + (clean.length > maxLength ? '...' : '');
+    return clean.slice(0, maxLength) + (clean.length > maxLength ? "..." : "");
   }
 
   // Window centered around match
@@ -230,8 +248,8 @@ export function getSmartExcerpt(content: string, terms: string[], maxLength = 95
   const end = Math.min(clean.length, start + maxLength);
   let snippet = clean.slice(start, end);
 
-  if (start > 0) snippet = '...' + snippet;
-  if (end < clean.length) snippet = snippet + '...';
+  if (start > 0) snippet = "..." + snippet;
+  if (end < clean.length) snippet = snippet + "...";
 
   return snippet;
 }
@@ -243,7 +261,7 @@ export const HighlightText: React.FC<{
   text: string;
   terms: string[];
   className?: string;
-}> = ({ text, terms, className = '' }) => {
+}> = ({ text, terms, className = "" }) => {
   const segments = getHighlightedSegments(text, terms);
 
   if (segments.length === 1 && !segments[0].isMatch) {
@@ -262,7 +280,7 @@ export const HighlightText: React.FC<{
           </mark>
         ) : (
           <React.Fragment key={idx}>{seg.text}</React.Fragment>
-        )
+        ),
       )}
     </span>
   );

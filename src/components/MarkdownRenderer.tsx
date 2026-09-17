@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { marked } from 'marked';
+import React, { useMemo } from "react";
+import { marked } from "marked";
 
 interface MarkdownRendererProps {
   content: string;
@@ -9,7 +9,7 @@ interface MarkdownRendererProps {
 
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   content,
-  className = '',
+  className = "",
 }) => {
   // Convert markdown to HTML safely using marked with GitHub Flavored Markdown
   const htmlContent = useMemo(() => {
@@ -24,9 +24,9 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       });
 
       const parsed = marked.parse(content);
-      return typeof parsed === 'string' ? parsed : '';
+      return typeof parsed === "string" ? parsed : "";
     } catch (e) {
-      console.error('Markdown parse error:', e);
+      console.error("Markdown parse error:", e);
       return `<pre class="text-red-500 font-mono text-sm">${content}</pre>`;
     }
   }, [content]);

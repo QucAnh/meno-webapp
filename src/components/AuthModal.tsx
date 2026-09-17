@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { X, Mail, Lock, User as UserIcon, Sparkles, AlertTriangle } from 'lucide-react';
+import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import {
+  X,
+  Mail,
+  Lock,
+  User as UserIcon,
+  Sparkles,
+  AlertTriangle,
+} from "lucide-react";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -20,8 +27,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   } = useAuth();
 
   const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -33,12 +40,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     clearError();
 
     if (!email || !password) {
-      setLocalError('Please enter both email and password.');
+      setLocalError("Please enter both email and password.");
       return;
     }
 
     if (password.length < 6) {
-      setLocalError('Password must be at least 6 characters.');
+      setLocalError("Password must be at least 6 characters.");
       return;
     }
 
@@ -51,7 +58,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       }
       onClose();
     } catch (err: any) {
-      setLocalError(err.message || 'Authentication failed');
+      setLocalError(err.message || "Authentication failed");
     } finally {
       setIsSubmitting(false);
     }
@@ -65,7 +72,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       await signInWithGoogle();
       onClose();
     } catch (err: any) {
-      setLocalError(err.message || 'Google sign in failed');
+      setLocalError(err.message || "Google sign in failed");
     } finally {
       setIsSubmitting(false);
     }
@@ -79,12 +86,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       await signInAsGuest();
       onClose();
     } catch (err: any) {
-      if (err.message && (err.message.includes('Anonymous authentication is disabled') || err.message.includes('admin-restricted-operation'))) {
+      if (
+        err.message &&
+        (err.message.includes("Anonymous authentication is disabled") ||
+          err.message.includes("admin-restricted-operation"))
+      ) {
         setLocalError(
-          'Anonymous authentication is disabled in Firebase for this project. You can continue using the Local Workspace (saved in this browser), or sign in with Google / Email to sync to the cloud.'
+          "Anonymous authentication is disabled in Firebase for this project. You can continue using the Local Workspace (saved in this browser), or sign in with Google / Email to sync to the cloud.",
         );
       } else {
-        setLocalError(err.message || 'Guest sign in failed');
+        setLocalError(err.message || "Guest sign in failed");
       }
     } finally {
       setIsSubmitting(false);
@@ -110,10 +121,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </div>
             <div>
               <h2 className="text-base font-semibold text-neutral-900">
-                {user ? 'Account Management' : isSignUp ? 'Create MemoFlow Account' : 'Sign In to MemoFlow'}
+                {user
+                  ? "Account Management"
+                  : isSignUp
+                    ? "Create MemoFlow Account"
+                    : "Sign In to MemoFlow"}
               </h2>
               <p className="text-xs text-neutral-500">
-                {user ? `Signed in as ${user.email || 'Anonymous Guest'}` : 'Sync notes in real-time across devices'}
+                {user
+                  ? `Signed in as ${user.email || "Anonymous Guest"}`
+                  : "Sync notes in real-time across devices"}
               </p>
             </div>
           </div>
@@ -138,16 +155,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           {user ? (
             <div className="space-y-4 text-center">
               <div className="w-16 h-16 mx-auto rounded-full bg-amber-100 text-neutral-900 flex items-center justify-center text-xl font-bold">
-                {user.email ? user.email[0].toUpperCase() : 'G'}
+                {user.email ? user.email[0].toUpperCase() : "G"}
               </div>
               <div>
                 <p className="text-sm font-medium text-neutral-900">
-                  {user.email || 'Guest User (Anonymous)'}
+                  {user.email || "Guest User (Anonymous)"}
                 </p>
-                <p className="text-xs text-neutral-500 font-mono mt-0.5">UID: {user.uid.slice(0, 12)}...</p>
+                <p className="text-xs text-neutral-500 font-mono mt-0.5">
+                  UID: {user.uid.slice(0, 12)}...
+                </p>
                 {user.isAnonymous && (
                   <p className="mt-2 text-xs text-amber-800 bg-amber-50 p-2 rounded-md border border-amber-200">
-                    You are in Guest Mode. Notes are synced to Firestore under your temporary session. Sign in with Google or Email to bind notes permanently.
+                    You are in Guest Mode. Notes are synced to Firestore under
+                    your temporary session. Sign in with Google or Email to bind
+                    notes permanently.
                   </p>
                 )}
               </div>
@@ -207,14 +228,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
               <div className="flex items-center my-3">
                 <div className="flex-1 border-t border-neutral-200"></div>
-                <span className="px-3 text-xs text-neutral-400 uppercase tracking-wider">or with email</span>
+                <span className="px-3 text-xs text-neutral-400 uppercase tracking-wider">
+                  or with email
+                </span>
                 <div className="flex-1 border-t border-neutral-200"></div>
               </div>
 
               {/* Email Form */}
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
-                  <label className="block text-xs font-medium text-neutral-700 mb-1">Email address</label>
+                  <label className="block text-xs font-medium text-neutral-700 mb-1">
+                    Email address
+                  </label>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
                     <input
@@ -230,7 +255,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-neutral-700 mb-1">Password</label>
+                  <label className="block text-xs font-medium text-neutral-700 mb-1">
+                    Password
+                  </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
                     <input
@@ -251,7 +278,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   disabled={isSubmitting}
                   className="w-full py-2.5 px-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium text-sm rounded-xl transition-colors shadow-xs"
                 >
-                  {isSubmitting ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
+                  {isSubmitting
+                    ? "Please wait..."
+                    : isSignUp
+                      ? "Create Account"
+                      : "Sign In"}
                 </button>
               </form>
 
@@ -265,7 +296,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   }}
                   className="hover:text-neutral-900 hover:underline"
                 >
-                  {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+                  {isSignUp
+                    ? "Already have an account? Sign in"
+                    : "Don't have an account? Sign up"}
                 </button>
               </div>
 

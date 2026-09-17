@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Note, SyncStatus } from '../types/note';
-import { SyncStatusIndicator } from './SyncStatusIndicator';
-import { MarkdownRenderer } from './MarkdownRenderer';
+import React, { useState, useEffect, useRef } from "react";
+import { Note, SyncStatus } from "../types/note";
+import { SyncStatusIndicator } from "./SyncStatusIndicator";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 import {
   Bold,
   Italic,
@@ -28,11 +28,15 @@ import {
   X,
   Plus,
   Trash2,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface EditorSplitViewProps {
   note: Note | null;
-  onUpdateNote: (noteId: string, updates: Partial<Note>, debounceMs?: number) => void;
+  onUpdateNote: (
+    noteId: string,
+    updates: Partial<Note>,
+    debounceMs?: number,
+  ) => void;
   onSaveImmediate: (noteId: string, updates?: Partial<Note>) => void;
   onTogglePin: (noteId: string) => void;
   onDeleteNote?: (noteId: string) => void;
@@ -41,7 +45,7 @@ interface EditorSplitViewProps {
   errorMessage?: string | null;
 }
 
-type ViewMode = 'split' | 'editor' | 'preview';
+type ViewMode = "split" | "editor" | "preview";
 
 export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
   note,
@@ -53,15 +57,15 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
   allFolders,
   errorMessage,
 }) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('split');
+  const [viewMode, setViewMode] = useState<ViewMode>("split");
   const [copied, setCopied] = useState(false);
-  const [tagInput, setTagInput] = useState('');
+  const [tagInput, setTagInput] = useState("");
   const [showTagInput, setShowTagInput] = useState(false);
 
   // Local mirror state for super-smooth typing
-  const [localTitle, setLocalTitle] = useState('');
-  const [localContent, setLocalContent] = useState('');
-  const [localFolder, setLocalFolder] = useState('General');
+  const [localTitle, setLocalTitle] = useState("");
+  const [localContent, setLocalContent] = useState("");
+  const [localFolder, setLocalFolder] = useState("General");
   const [localTags, setLocalTags] = useState<string[]>([]);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -77,15 +81,18 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
         setLocalFolder(note.folder);
         setLocalTags(note.tags);
         setShowTagInput(false);
-        setTagInput('');
+        setTagInput("");
       } else {
         // If note updated externally, only update if not dirty
-        if (note.title !== localTitle && document.activeElement?.id !== 'active-note-title-input') {
+        if (
+          note.title !== localTitle &&
+          document.activeElement?.id !== "active-note-title-input"
+        ) {
           setLocalTitle(note.title);
         }
         if (
           note.content !== localContent &&
-          document.activeElement?.id !== 'markdown-textarea-editor'
+          document.activeElement?.id !== "markdown-textarea-editor"
         ) {
           setLocalContent(note.content);
         }
@@ -100,19 +107,19 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
   // Adjust viewMode automatically for mobile viewports
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768 && viewMode === 'split') {
-        setViewMode('editor');
+      if (window.innerWidth < 768 && viewMode === "split") {
+        setViewMode("editor");
       }
     };
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [viewMode]);
 
   // Keyboard shortcut: Cmd+S to save immediately
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
         e.preventDefault();
         if (note) {
           onSaveImmediate(note.id, {
@@ -124,8 +131,8 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
         }
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [note, localTitle, localContent, localFolder, localTags, onSaveImmediate]);
 
   if (!note) {
@@ -134,9 +141,12 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
         <div className="w-12 h-12 rounded-2xl bg-amber-100/60 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 flex items-center justify-center mb-3">
           <Edit3 className="w-6 h-6" />
         </div>
-        <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">Select or create a note</h3>
+        <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+          Select or create a note
+        </h3>
         <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1 max-w-sm">
-          Pick a note from the list on the left, or press the "+ New Note" button to start typing immediately.
+          Pick a note from the list on the left, or press the "+ New Note"
+          button to start typing immediately.
         </p>
       </div>
     );
@@ -158,14 +168,14 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
   };
 
   const handleAddTag = (e: React.KeyboardEvent | React.MouseEvent) => {
-    if ('key' in e && e.key !== 'Enter') return;
+    if ("key" in e && e.key !== "Enter") return;
     e.preventDefault();
-    const cleanTag = tagInput.trim().toLowerCase().replace(/^#/, '');
+    const cleanTag = tagInput.trim().toLowerCase().replace(/^#/, "");
     if (cleanTag && !localTags.includes(cleanTag)) {
       const updatedTags = [...localTags, cleanTag];
       setLocalTags(updatedTags);
       onUpdateNote(note.id, { tags: updatedTags }, 200);
-      setTagInput('');
+      setTagInput("");
       setShowTagInput(false);
     }
   };
@@ -177,7 +187,11 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
   };
 
   // Markdown Formatting insertions
-  const insertFormatting = (prefix: string, suffix: string = '', defaultText: string = '') => {
+  const insertFormatting = (
+    prefix: string,
+    suffix: string = "",
+    defaultText: string = "",
+  ) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
@@ -187,7 +201,9 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
     const replacement = `${prefix}${selectedText}${suffix}`;
 
     const newContent =
-      localContent.substring(0, start) + replacement + localContent.substring(end);
+      localContent.substring(0, start) +
+      replacement +
+      localContent.substring(end);
 
     setLocalContent(newContent);
     onUpdateNote(note.id, { content: newContent }, 500);
@@ -196,7 +212,7 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
       textarea.focus();
       textarea.setSelectionRange(
         start + prefix.length,
-        start + prefix.length + selectedText.length
+        start + prefix.length + selectedText.length,
       );
     }, 10);
   };
@@ -207,16 +223,18 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Clipboard error:', err);
+      console.error("Clipboard error:", err);
     }
   };
 
   const handleDownloadMarkdown = () => {
-    const blob = new Blob([localContent], { type: 'text/markdown;charset=utf-8;' });
+    const blob = new Blob([localContent], {
+      type: "text/markdown;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.download = `${(localTitle || 'note').replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
+    link.download = `${(localTitle || "note").replace(/[^a-z0-9]/gi, "_").toLowerCase()}.md`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -224,12 +242,17 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
   };
 
   // Stats
-  const wordCount = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
+  const wordCount = localContent.trim()
+    ? localContent.trim().split(/\s+/).length
+    : 0;
   const charCount = localContent.length;
   const readTimeMin = Math.max(1, Math.ceil(wordCount / 200));
 
   return (
-    <div id="memoflow-editor-container" className="flex-1 flex flex-col h-full bg-white dark:bg-neutral-900 overflow-hidden transition-colors">
+    <div
+      id="memoflow-editor-container"
+      className="flex-1 flex flex-col h-full bg-white dark:bg-neutral-900 overflow-hidden transition-colors"
+    >
       {/* Top Editor Bar */}
       <div className="px-4 py-2.5 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-3 bg-neutral-50/50 dark:bg-neutral-900/70">
         {/* Left: Metadata controls (Folder & Pin) */}
@@ -244,7 +267,11 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
               className="bg-transparent text-xs font-medium text-neutral-800 dark:text-neutral-200 focus:outline-hidden cursor-pointer"
             >
               {allFolders.map((f) => (
-                <option key={f} value={f} className="dark:bg-neutral-800 dark:text-neutral-200">
+                <option
+                  key={f}
+                  value={f}
+                  className="dark:bg-neutral-800 dark:text-neutral-200"
+                >
                   {f}
                 </option>
               ))}
@@ -257,13 +284,17 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
             onClick={() => onTogglePin(note.id)}
             className={`p-1.5 rounded-lg border text-xs flex items-center gap-1 transition-colors ${
               note.isPinned
-                ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 font-medium'
-                : 'bg-white dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-200'
+                ? "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 font-medium"
+                : "bg-white dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-200"
             }`}
-            title={note.isPinned ? 'Unpin note' : 'Pin note to top'}
+            title={note.isPinned ? "Unpin note" : "Pin note to top"}
           >
-            <Star className={`w-3.5 h-3.5 ${note.isPinned ? 'fill-amber-400 text-amber-500' : ''}`} />
-            <span className="hidden sm:inline">{note.isPinned ? 'Pinned' : 'Pin'}</span>
+            <Star
+              className={`w-3.5 h-3.5 ${note.isPinned ? "fill-amber-400 text-amber-500" : ""}`}
+            />
+            <span className="hidden sm:inline">
+              {note.isPinned ? "Pinned" : "Pin"}
+            </span>
           </button>
         </div>
 
@@ -285,7 +316,11 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
             className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
             title="Copy Raw Markdown"
           >
-            {copied ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-4 h-4" />}
+            {copied ? (
+              <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
           </button>
 
           {/* Download as .md */}
@@ -316,11 +351,11 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
           <div className="flex items-center bg-neutral-200/70 dark:bg-neutral-800 p-0.5 rounded-lg text-xs">
             <button
               id="view-mode-editor-btn"
-              onClick={() => setViewMode('editor')}
+              onClick={() => setViewMode("editor")}
               className={`p-1 rounded-md transition-all ${
-                viewMode === 'editor'
-                  ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-2xs font-medium'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                viewMode === "editor"
+                  ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-2xs font-medium"
+                  : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
               }`}
               title="Editor only"
             >
@@ -328,11 +363,11 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
             </button>
             <button
               id="view-mode-split-btn"
-              onClick={() => setViewMode('split')}
+              onClick={() => setViewMode("split")}
               className={`p-1 rounded-md transition-all ${
-                viewMode === 'split'
-                  ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-2xs font-medium'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                viewMode === "split"
+                  ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-2xs font-medium"
+                  : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
               }`}
               title="Split side-by-side"
             >
@@ -340,11 +375,11 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
             </button>
             <button
               id="view-mode-preview-btn"
-              onClick={() => setViewMode('preview')}
+              onClick={() => setViewMode("preview")}
               className={`p-1 rounded-md transition-all ${
-                viewMode === 'preview'
-                  ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-2xs font-medium'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                viewMode === "preview"
+                  ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-2xs font-medium"
+                  : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
               }`}
               title="Rendered preview only"
             >
@@ -418,27 +453,27 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
       </div>
 
       {/* Markdown Formatting Toolbar (Visible in Split or Editor Mode) */}
-      {viewMode !== 'preview' && (
+      {viewMode !== "preview" && (
         <div
           id="markdown-formatting-toolbar"
           className="px-4 py-1.5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/60 flex items-center gap-1 overflow-x-auto custom-scrollbar text-neutral-600 dark:text-neutral-400"
         >
           <button
-            onClick={() => insertFormatting('**', '**', 'bold text')}
+            onClick={() => insertFormatting("**", "**", "bold text")}
             className="p-1.5 hover:bg-neutral-200/70 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md transition-colors"
             title="Bold (**text**)"
           >
             <Bold className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => insertFormatting('*', '*', 'italic text')}
+            onClick={() => insertFormatting("*", "*", "italic text")}
             className="p-1.5 hover:bg-neutral-200/70 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md transition-colors"
             title="Italic (*text*)"
           >
             <Italic className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => insertFormatting('~~', '~~', 'strikethrough')}
+            onClick={() => insertFormatting("~~", "~~", "strikethrough")}
             className="p-1.5 hover:bg-neutral-200/70 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md transition-colors"
             title="Strikethrough (~~text~~)"
           >
@@ -448,21 +483,21 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
           <div className="h-3.5 w-px bg-neutral-300 dark:bg-neutral-700 mx-1" />
 
           <button
-            onClick={() => insertFormatting('# ', '', 'Heading 1')}
+            onClick={() => insertFormatting("# ", "", "Heading 1")}
             className="p-1.5 hover:bg-neutral-200/70 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md transition-colors"
             title="Heading 1"
           >
             <Heading1 className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => insertFormatting('## ', '', 'Heading 2')}
+            onClick={() => insertFormatting("## ", "", "Heading 2")}
             className="p-1.5 hover:bg-neutral-200/70 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md transition-colors"
             title="Heading 2"
           >
             <Heading2 className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => insertFormatting('### ', '', 'Heading 3')}
+            onClick={() => insertFormatting("### ", "", "Heading 3")}
             className="p-1.5 hover:bg-neutral-200/70 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md transition-colors"
             title="Heading 3"
           >
@@ -472,45 +507,45 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
           <div className="h-3.5 w-px bg-neutral-300 dark:bg-neutral-700 mx-1" />
 
           <button
-            onClick={() => insertFormatting('> ', '', 'Quote')}
+            onClick={() => insertFormatting("> ", "", "Quote")}
             className="p-1.5 hover:bg-neutral-200/70 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md transition-colors"
             title="Quote (> text)"
           >
             <Quote className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => insertFormatting('`', '`', 'inline code')}
+            onClick={() => insertFormatting("`", "`", "inline code")}
             className="p-1.5 hover:bg-neutral-200/70 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md transition-colors"
             title="Inline Code (`code`)"
           >
             <Code className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => insertFormatting('```\n', '\n```', 'code block')}
+            onClick={() => insertFormatting("```\n", "\n```", "code block")}
             className="p-1.5 hover:bg-neutral-200/70 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md text-xs font-mono font-medium transition-colors"
             title="Code Block"
           >
-            {'{}'}
+            {"{}"}
           </button>
 
           <div className="h-3.5 w-px bg-neutral-300 dark:bg-neutral-700 mx-1" />
 
           <button
-            onClick={() => insertFormatting('- ', '', 'List item')}
+            onClick={() => insertFormatting("- ", "", "List item")}
             className="p-1.5 hover:bg-neutral-200/70 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md transition-colors"
             title="Bullet List (- item)"
           >
             <List className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => insertFormatting('1. ', '', 'Numbered item')}
+            onClick={() => insertFormatting("1. ", "", "Numbered item")}
             className="p-1.5 hover:bg-neutral-200/70 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md transition-colors"
             title="Numbered List (1. item)"
           >
             <ListOrdered className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => insertFormatting('- [ ] ', '', 'Task item')}
+            onClick={() => insertFormatting("- [ ] ", "", "Task item")}
             className="p-1.5 hover:bg-neutral-200/70 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md transition-colors"
             title="Task List (- [ ] item)"
           >
@@ -520,7 +555,9 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
           <div className="h-3.5 w-px bg-neutral-300 dark:bg-neutral-700 mx-1" />
 
           <button
-            onClick={() => insertFormatting('[', '](https://example.com)', 'Link text')}
+            onClick={() =>
+              insertFormatting("[", "](https://example.com)", "Link text")
+            }
             className="p-1.5 hover:bg-neutral-200/70 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md transition-colors"
             title="Insert Link ([text](url))"
           >
@@ -529,9 +566,9 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
           <button
             onClick={() =>
               insertFormatting(
-                '| Column 1 | Column 2 |\n| -------- | -------- |\n| Item 1   | Item 2   |\n',
-                '',
-                ''
+                "| Column 1 | Column 2 |\n| -------- | -------- |\n| Item 1   | Item 2   |\n",
+                "",
+                "",
               )
             }
             className="p-1.5 hover:bg-neutral-200/70 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md transition-colors"
@@ -545,16 +582,18 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
       {/* Main Workspace Area (Split or Single) */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Left Side: Markdown Raw Textarea */}
-        {viewMode !== 'preview' && (
+        {viewMode !== "preview" && (
           <div
             className={`
               h-full flex flex-col border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900
-              ${viewMode === 'split' ? 'w-1/2' : 'w-full'}
+              ${viewMode === "split" ? "w-1/2" : "w-full"}
             `}
           >
             <div className="px-4 py-1.5 text-[11px] font-mono text-neutral-400 dark:text-neutral-500 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between select-none bg-neutral-50/30 dark:bg-neutral-900/40">
               <span>MARKDOWN SOURCE</span>
-              <span className="text-[10px] text-neutral-400 dark:text-neutral-500">Auto-saves every 500ms</span>
+              <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
+                Auto-saves every 500ms
+              </span>
             </div>
 
             <textarea
@@ -570,16 +609,18 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
         )}
 
         {/* Right Side: Rendered Markdown Preview */}
-        {viewMode !== 'editor' && (
+        {viewMode !== "editor" && (
           <div
             className={`
               h-full flex flex-col bg-neutral-50/40 dark:bg-neutral-950/40 overflow-hidden
-              ${viewMode === 'split' ? 'w-1/2' : 'w-full'}
+              ${viewMode === "split" ? "w-1/2" : "w-full"}
             `}
           >
             <div className="px-4 py-1.5 text-[11px] font-mono text-neutral-400 dark:text-neutral-500 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between select-none bg-neutral-50/30 dark:bg-neutral-900/40">
               <span>RENDERED PREVIEW</span>
-              <span className="text-[10px] text-neutral-400 dark:text-neutral-500">GitHub Flavored Markdown</span>
+              <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
+                GitHub Flavored Markdown
+              </span>
             </div>
 
             <div className="flex-1 p-6 overflow-y-auto custom-scrollbar bg-white dark:bg-neutral-900">
@@ -600,7 +641,9 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
           <span className="text-neutral-400 dark:text-neutral-500 font-mono text-[10px]">
             Updated {new Date(note.updatedAt).toLocaleTimeString()}
           </span>
-          <span className="text-neutral-400 dark:text-neutral-500 hidden sm:inline">⌘S to save immediately</span>
+          <span className="text-neutral-400 dark:text-neutral-500 hidden sm:inline">
+            ⌘S to save immediately
+          </span>
         </div>
       </div>
     </div>
