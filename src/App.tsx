@@ -1,16 +1,19 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
-import { useNotes } from './hooks/useNotes';
-import { Sidebar } from './components/Sidebar';
-import { NotesList } from './components/NotesList';
-import { EditorSplitView } from './components/EditorSplitView';
-import { AuthModal } from './components/AuthModal';
-import { ConfirmDeleteModal, DeleteTarget } from './components/ConfirmDeleteModal';
-import { Menu, Plus, WifiOff, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from "react";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
+import { useNotes } from "./hooks/useNotes";
+import { Sidebar } from "./components/Sidebar";
+import { NotesList } from "./components/NotesList";
+import { EditorSplitView } from "./components/EditorSplitView";
+import { AuthModal } from "./components/AuthModal";
+import {
+  ConfirmDeleteModal,
+  DeleteTarget,
+} from "./components/ConfirmDeleteModal";
+import { Menu, Plus, WifiOff, AlertCircle } from "lucide-react";
 
 const INITIAL_WELCOME_NOTE = {
-  title: '🚀 Welcome to MemoFlow',
+  title: "🚀 Welcome to MemoFlow",
   content: `# Welcome to MemoFlow!
 
 MemoFlow is your fast, minimal Markdown note-taking workspace with **instant real-time syncing** powered by Firebase Firestore.
@@ -43,8 +46,8 @@ const sync = async (note: Note) => {
 - [ ] Try **⌘ + S** to force immediate save
 
 Happy writing!`,
-  tags: ['getting-started', 'guide'],
-  folder: 'General',
+  tags: ["getting-started", "guide"],
+  folder: "General",
   isPinned: true,
 };
 
@@ -82,7 +85,7 @@ function MemoFlowWorkspace() {
   // Sidebar collapse state (persisted in localStorage)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('memoflow_sidebar_collapsed') === 'true';
+      return localStorage.getItem("memoflow_sidebar_collapsed") === "true";
     } catch {
       return false;
     }
@@ -92,7 +95,7 @@ function MemoFlowWorkspace() {
     setIsSidebarCollapsed((prev) => {
       const next = !prev;
       try {
-        localStorage.setItem('memoflow_sidebar_collapsed', String(next));
+        localStorage.setItem("memoflow_sidebar_collapsed", String(next));
       } catch {}
       return next;
     });
@@ -104,7 +107,13 @@ function MemoFlowWorkspace() {
 
   // Seed initial welcome note if signed-in user has zero notes and both auth and notes have finished loading
   useEffect(() => {
-    if (!notesLoading && !authLoading && user && notes.length === 0 && !welcomeSeededRef.current) {
+    if (
+      !notesLoading &&
+      !authLoading &&
+      user &&
+      notes.length === 0 &&
+      !welcomeSeededRef.current
+    ) {
       welcomeSeededRef.current = true;
       createNote(INITIAL_WELCOME_NOTE);
     }
@@ -114,16 +123,16 @@ function MemoFlowWorkspace() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isCmdOrCtrl = e.metaKey || e.ctrlKey;
-      if (isCmdOrCtrl && e.key.toLowerCase() === 'n') {
+      if (isCmdOrCtrl && e.key.toLowerCase() === "n") {
         e.preventDefault();
         createNote();
-      } else if (isCmdOrCtrl && e.key === '\\') {
+      } else if (isCmdOrCtrl && e.key === "\\") {
         e.preventDefault();
         handleToggleSidebarCollapse();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [createNote, handleToggleSidebarCollapse]);
 
   const handleCreateNewNote = async () => {
@@ -138,16 +147,19 @@ function MemoFlowWorkspace() {
     if (e) e.stopPropagation();
     const target = notes.find((n) => n.id === noteId);
     setDeleteTarget({
-      type: 'note',
+      type: "note",
       id: noteId,
-      title: target?.title || 'Untitled Note',
+      title: target?.title || "Untitled Note",
     });
   };
 
   // Open folder delete confirmation modal
-  const handleRequestDeleteFolder = (folderName: string, notesCount: number) => {
+  const handleRequestDeleteFolder = (
+    folderName: string,
+    notesCount: number,
+  ) => {
     setDeleteTarget({
-      type: 'folder',
+      type: "folder",
       name: folderName,
       notesCount,
     });
@@ -158,14 +170,14 @@ function MemoFlowWorkspace() {
     if (!deleteTarget) return;
     setIsDeleting(true);
     try {
-      if (deleteTarget.type === 'note') {
+      if (deleteTarget.type === "note") {
         await deleteNote(deleteTarget.id);
-      } else if (deleteTarget.type === 'folder') {
+      } else if (deleteTarget.type === "folder") {
         await deleteFolder(deleteTarget.name);
       }
       setDeleteTarget(null);
     } catch (err) {
-      console.error('Failed to complete delete:', err);
+      console.error("Failed to complete delete:", err);
     } finally {
       setIsDeleting(false);
     }
@@ -185,7 +197,10 @@ function MemoFlowWorkspace() {
           className="bg-neutral-900 text-amber-300 text-xs px-4 py-1.5 flex items-center justify-center gap-2 border-b border-neutral-800 shrink-0"
         >
           <WifiOff className="w-3.5 h-3.5" />
-          <span>You are currently offline. Edits are safely stored locally and will sync once reconnected.</span>
+          <span>
+            You are currently offline. Edits are safely stored locally and will
+            sync once reconnected.
+          </span>
         </div>
       )}
 

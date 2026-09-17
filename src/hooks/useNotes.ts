@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   collection,
   doc,
@@ -8,15 +8,15 @@ import {
   onSnapshot,
   query,
   where,
-} from 'firebase/firestore';
-import { db } from '../firebaseConfig';
-import { Note, SyncStatus, NoteFilter } from '../types/note';
-import { useAuth } from '../context/AuthContext';
-import { parseSearchQuery, matchesSearchQuery } from '../utils/searchUtils';
+} from "firebase/firestore";
+import { db } from "../firebaseConfig";
+import { Note, SyncStatus, NoteFilter } from "../types/note";
+import { useAuth } from "../context/AuthContext";
+import { parseSearchQuery, matchesSearchQuery } from "../utils/searchUtils";
 
-const DEFAULT_FOLDERS = ['General', 'Study', 'Work', 'Ideas', 'Projects'];
-const LOCAL_STORAGE_KEY = 'memoflow_local_notes_v1';
-const FOLDERS_STORAGE_KEY = 'memoflow_custom_folders_v1';
+const DEFAULT_FOLDERS = ["General", "Study", "Work", "Ideas", "Projects"];
+const LOCAL_STORAGE_KEY = "memoflow_local_notes_v1";
+const FOLDERS_STORAGE_KEY = "memoflow_custom_folders_v1";
 
 function getStoredFolders(): string[] {
   try {
@@ -28,13 +28,13 @@ function getStoredFolders(): string[] {
       }
     }
   } catch (e) {
-    console.warn('Failed to load folders from storage:', e);
+    console.warn("Failed to load folders from storage:", e);
   }
   return DEFAULT_FOLDERS;
 }
 
-const INITIAL_WELCOME_NOTE: Omit<Note, 'id' | 'userId'> = {
-  title: '🚀 Welcome to MemoFlow',
+const INITIAL_WELCOME_NOTE: Omit<Note, "id" | "userId"> = {
+  title: "🚀 Welcome to MemoFlow",
   content: `# Welcome to MemoFlow!
 
 MemoFlow is your fast, minimal Markdown note-taking workspace with **instant real-time syncing** powered by Firebase Firestore.
@@ -67,8 +67,8 @@ const sync = async (note: Note) => {
 - [ ] Try **⌘ + S** to force immediate save
 
 Happy writing!`,
-  tags: ['getting-started', 'guide'],
-  folder: 'General',
+  tags: ["getting-started", "guide"],
+  folder: "General",
   isPinned: true,
   createdAt: Date.now(),
   updatedAt: Date.now(),
@@ -87,14 +87,15 @@ function deduplicateNotes(list: Note[]): Note[] {
     seenIds.add(n.id);
 
     // Filter out duplicate default welcome notes or identical twin notes
-    const isWelcome = n.title === 'Welcome to MemoFlow' || n.id.startsWith('local_welcome_');
-    const signature = `${(n.title || '').trim()}:::${(n.content || '').trim()}:::${(n.folder || 'General').trim()}`;
+    const isWelcome =
+      n.title === "Welcome to MemoFlow" || n.id.startsWith("local_welcome_");
+    const signature = `${(n.title || "").trim()}:::${(n.content || "").trim()}:::${(n.folder || "General").trim()}`;
 
     if (isWelcome) {
-      if (seenSignatures.has('welcome_note_signature')) {
+      if (seenSignatures.has("welcome_note_signature")) {
         continue;
       }
-      seenSignatures.add('welcome_note_signature');
+      seenSignatures.add("welcome_note_signature");
     } else if (signature.length > 10) {
       if (seenSignatures.has(signature)) {
         continue;
@@ -118,14 +119,14 @@ function getLocalGuestNotes(): Note[] {
       }
     }
   } catch (err) {
-    console.warn('Failed to parse local notes:', err);
+    console.warn("Failed to parse local notes:", err);
   }
 
   // Seed default guest note
   const initialNote: Note = {
     ...INITIAL_WELCOME_NOTE,
-    id: 'local_welcome_' + Date.now().toString(36),
-    userId: 'guest',
+    id: "local_welcome_" + Date.now().toString(36),
+    userId: "guest",
   };
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify([initialNote]));
@@ -137,9 +138,12 @@ function getLocalGuestNotes(): Note[] {
 
 function saveLocalGuestNotes(notesList: Note[]): void {
   try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(deduplicateNotes(notesList)));
+    localStorage.setItem(
+      LOCAL_STORAGE_KEY,
+      JSON.stringify(deduplicateNotes(notesList)),
+    );
   } catch (e) {
-    console.warn('Failed to save to localStorage:', e);
+    console.warn("Failed to save to localStorage:", e);
   }
 }
 
@@ -148,39 +152,39 @@ export function useNotes() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>('saved');
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("saved");
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
 
   // Online / Offline tracking
   const [isOnline, setIsOnline] = useState<boolean>(
-    typeof navigator !== 'undefined' ? navigator.onLine : true
+    typeof navigator !== "undefined" ? navigator.onLine : true,
   );
 
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      setSyncStatus('saved');
+      setSyncStatus("saved");
     };
     const handleOffline = () => {
       setIsOnline(false);
-      setSyncStatus('offline');
+      setSyncStatus("offline");
     };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
   // Filter state
   const [filter, setFilter] = useState<NoteFilter>({
-    folder: 'all',
+    folder: "all",
     tag: null,
     onlyPinned: false,
-    searchQuery: '',
+    searchQuery: "",
   });
 
   // Track folders list with persistent storage
@@ -188,7 +192,10 @@ export function useNotes() {
 
   // Debounce timer and pending save ref
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingUpdatesRef = useRef<{ noteId: string; updates: Partial<Note> } | null>(null);
+  const pendingUpdatesRef = useRef<{
+    noteId: string;
+    updates: Partial<Note>;
+  } | null>(null);
   const isMigratingRef = useRef<boolean>(false);
 
   // Synchronize with Firestore (if user signed in) OR localStorage (if guest)
@@ -209,7 +216,7 @@ export function useNotes() {
         return localNotes.length > 0 ? localNotes[0].id : null;
       });
       setLoading(false);
-      setSyncStatus('saved');
+      setSyncStatus("saved");
       return;
     }
 
@@ -230,11 +237,13 @@ export function useNotes() {
             isMigratingRef.current = true;
             for (const note of parsed) {
               // Avoid migrating default welcome templates if user is already registered
-              const isDefaultWelcome = note.id?.startsWith('local_welcome_') || note.title === 'Welcome to MemoFlow';
+              const isDefaultWelcome =
+                note.id?.startsWith("local_welcome_") ||
+                note.title === "Welcome to MemoFlow";
               if (isDefaultWelcome) {
                 continue;
               }
-              const notesCol = collection(db, 'notes');
+              const notesCol = collection(db, "notes");
               const newRef = doc(notesCol);
               const migratedNote: Note = {
                 ...note,
@@ -247,7 +256,7 @@ export function useNotes() {
           }
         }
       } catch (migrationErr) {
-        console.warn('Guest notes migration note:', migrationErr);
+        console.warn("Guest notes migration note:", migrationErr);
       } finally {
         isMigratingRef.current = false;
       }
@@ -255,8 +264,8 @@ export function useNotes() {
 
     migrateGuestNotes();
 
-    const notesColRef = collection(db, 'notes');
-    const q = query(notesColRef, where('userId', '==', user.uid));
+    const notesColRef = collection(db, "notes");
+    const q = query(notesColRef, where("userId", "==", user.uid));
 
     // Real-time onSnapshot listener with automatic deduplication
     const unsubscribe = onSnapshot(
@@ -272,13 +281,15 @@ export function useNotes() {
           const data = docSnapshot.data();
           fetchedNotes.push({
             id: docSnapshot.id,
-            title: data.title || 'Untitled Note',
-            content: data.content ?? '',
+            title: data.title || "Untitled Note",
+            content: data.content ?? "",
             tags: Array.isArray(data.tags) ? data.tags : [],
-            folder: data.folder || 'General',
+            folder: data.folder || "General",
             isPinned: Boolean(data.isPinned),
-            updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : Date.now(),
-            createdAt: typeof data.createdAt === 'number' ? data.createdAt : Date.now(),
+            updatedAt:
+              typeof data.updatedAt === "number" ? data.updatedAt : Date.now(),
+            createdAt:
+              typeof data.createdAt === "number" ? data.createdAt : Date.now(),
             userId: data.userId || user.uid,
           });
         });
@@ -304,17 +315,17 @@ export function useNotes() {
         });
 
         if (!navigator.onLine) {
-          setSyncStatus('offline');
+          setSyncStatus("offline");
         } else {
-          setSyncStatus('saved');
+          setSyncStatus("saved");
         }
       },
       (err) => {
-        console.error('Firestore onSnapshot error:', err);
-        setError(err.message || 'Failed to fetch notes in real-time.');
-        setSyncStatus('error');
+        console.error("Firestore onSnapshot error:", err);
+        setError(err.message || "Failed to fetch notes in real-time.");
+        setSyncStatus("error");
         setLoading(false);
-      }
+      },
     );
 
     return () => {
@@ -331,9 +342,9 @@ export function useNotes() {
     async (noteId: string, updates: Partial<Note>) => {
       try {
         if (!navigator.onLine) {
-          setSyncStatus('offline');
+          setSyncStatus("offline");
         } else {
-          setSyncStatus('saving');
+          setSyncStatus("saving");
         }
 
         const dataToSave = {
@@ -344,35 +355,39 @@ export function useNotes() {
         // Always update React state optimistically
         setNotes((prevNotes) =>
           deduplicateNotes(
-            prevNotes.map((n) => (n.id === noteId ? { ...n, ...dataToSave } : n))
-          )
+            prevNotes.map((n) =>
+              n.id === noteId ? { ...n, ...dataToSave } : n,
+            ),
+          ),
         );
 
         if (user) {
           // Cloud Firestore update using setDoc with merge: true to avoid document missing errors
-          const noteDocRef = doc(db, 'notes', noteId);
+          const noteDocRef = doc(db, "notes", noteId);
           await setDoc(noteDocRef, dataToSave, { merge: true });
         } else {
           // Local storage update
           setNotes((curr) => {
-            const updated = curr.map((n) => (n.id === noteId ? { ...n, ...dataToSave } : n));
+            const updated = curr.map((n) =>
+              n.id === noteId ? { ...n, ...dataToSave } : n,
+            );
             saveLocalGuestNotes(updated);
             return updated;
           });
         }
 
         if (navigator.onLine) {
-          setSyncStatus('saved');
+          setSyncStatus("saved");
         } else {
-          setSyncStatus('offline');
+          setSyncStatus("offline");
         }
       } catch (err: any) {
-        console.error('Error saving note:', err);
-        setError(err.message || 'Error saving note');
-        setSyncStatus('error');
+        console.error("Error saving note:", err);
+        setError(err.message || "Error saving note");
+        setSyncStatus("error");
       }
     },
-    [user]
+    [user],
   );
 
   // Auto-save with 500ms debounce
@@ -381,11 +396,11 @@ export function useNotes() {
       // Immediately reflect changes in local state for instantaneous typing responsiveness
       setNotes((prev) =>
         prev.map((n) =>
-          n.id === noteId ? { ...n, ...updates, updatedAt: Date.now() } : n
-        )
+          n.id === noteId ? { ...n, ...updates, updatedAt: Date.now() } : n,
+        ),
       );
 
-      setSyncStatus(navigator.onLine ? 'saving' : 'offline');
+      setSyncStatus(navigator.onLine ? "saving" : "offline");
 
       // Stash pending updates
       pendingUpdatesRef.current = {
@@ -404,13 +419,14 @@ export function useNotes() {
 
       saveTimeoutRef.current = setTimeout(() => {
         if (pendingUpdatesRef.current) {
-          const { noteId: idToSave, updates: dataToSave } = pendingUpdatesRef.current;
+          const { noteId: idToSave, updates: dataToSave } =
+            pendingUpdatesRef.current;
           pendingUpdatesRef.current = null;
           executeSave(idToSave, dataToSave);
         }
       }, debounceMs);
     },
-    [executeSave]
+    [executeSave],
   );
 
   // Immediate save (e.g. on Cmd+S or note switch)
@@ -424,30 +440,30 @@ export function useNotes() {
       pendingUpdatesRef.current = null;
       await executeSave(noteId, dataToSave);
     },
-    [executeSave]
+    [executeSave],
   );
 
   // Create a new note
   const createNote = useCallback(
     async (initialData?: Partial<Note>): Promise<string | null> => {
       try {
-        setSyncStatus('saving');
+        setSyncStatus("saving");
 
         if (user) {
           // Cloud Firestore create
-          const notesColRef = collection(db, 'notes');
+          const notesColRef = collection(db, "notes");
           const newDocRef = doc(notesColRef); // unique ID
 
           const newNote: Note = {
             id: newDocRef.id,
-            title: initialData?.title?.trim() || 'Untitled Note',
+            title: initialData?.title?.trim() || "Untitled Note",
             content:
               initialData?.content ??
-              '# Welcome to MemoFlow\n\nStart typing Markdown here...',
-            tags: initialData?.tags || ['general'],
+              "# Welcome to MemoFlow\n\nStart typing Markdown here...",
+            tags: initialData?.tags || ["general"],
             folder:
               initialData?.folder ||
-              (filter.folder !== 'all' ? filter.folder : 'General'),
+              (filter.folder !== "all" ? filter.folder : "General"),
             isPinned: initialData?.isPinned ?? false,
             createdAt: Date.now(),
             updatedAt: Date.now(),
@@ -464,54 +480,61 @@ export function useNotes() {
             return [newNote, ...prev];
           });
           setActiveNoteId(newNote.id);
-          setSyncStatus('saved');
+          setSyncStatus("saved");
           return newNote.id;
         } else {
           // Guest / Local create
-          const localId = 'note_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6);
+          const localId =
+            "note_" +
+            Date.now().toString(36) +
+            "_" +
+            Math.random().toString(36).substring(2, 6);
           const newNote: Note = {
             id: localId,
-            title: initialData?.title?.trim() || 'Untitled Note',
+            title: initialData?.title?.trim() || "Untitled Note",
             content:
               initialData?.content ??
-              '# Welcome to MemoFlow\n\nStart typing Markdown here...',
-            tags: initialData?.tags || ['general'],
+              "# Welcome to MemoFlow\n\nStart typing Markdown here...",
+            tags: initialData?.tags || ["general"],
             folder:
               initialData?.folder ||
-              (filter.folder !== 'all' ? filter.folder : 'General'),
+              (filter.folder !== "all" ? filter.folder : "General"),
             isPinned: initialData?.isPinned ?? false,
             createdAt: Date.now(),
             updatedAt: Date.now(),
-            userId: 'guest',
+            userId: "guest",
           };
 
           setNotes((prev) => {
-            const nextList = [newNote, ...prev.filter((n) => n.id !== newNote.id)];
+            const nextList = [
+              newNote,
+              ...prev.filter((n) => n.id !== newNote.id),
+            ];
             saveLocalGuestNotes(nextList);
             return nextList;
           });
           setActiveNoteId(newNote.id);
-          setSyncStatus('saved');
+          setSyncStatus("saved");
           return newNote.id;
         }
       } catch (err: any) {
-        console.error('Error creating note:', err);
-        setError(err.message || 'Failed to create note.');
-        setSyncStatus('error');
+        console.error("Error creating note:", err);
+        setError(err.message || "Failed to create note.");
+        setSyncStatus("error");
         return null;
       }
     },
-    [user, filter.folder]
+    [user, filter.folder],
   );
 
   // Delete note
   const deleteNote = useCallback(
     async (noteId: string) => {
       try {
-        setSyncStatus('saving');
+        setSyncStatus("saving");
 
         if (user) {
-          const noteDocRef = doc(db, 'notes', noteId);
+          const noteDocRef = doc(db, "notes", noteId);
           await deleteDoc(noteDocRef);
         }
 
@@ -526,14 +549,14 @@ export function useNotes() {
           return remaining;
         });
 
-        setSyncStatus('saved');
+        setSyncStatus("saved");
       } catch (err: any) {
-        console.error('Error deleting note:', err);
-        setError(err.message || 'Failed to delete note.');
-        setSyncStatus('error');
+        console.error("Error deleting note:", err);
+        setError(err.message || "Failed to delete note.");
+        setSyncStatus("error");
       }
     },
-    [user, activeNoteId]
+    [user, activeNoteId],
   );
 
   // Toggle pinned status
@@ -545,7 +568,7 @@ export function useNotes() {
       const newPinned = !targetNote.isPinned;
       await executeSave(noteId, { isPinned: newPinned });
     },
-    [notes, executeSave]
+    [notes, executeSave],
   );
 
   // Aggregate tags from all existing notes (case-normalized, unique)
@@ -554,7 +577,7 @@ export function useNotes() {
     notes.forEach((n) => {
       if (Array.isArray(n.tags)) {
         n.tags.forEach((t) => {
-          if (typeof t === 'string' && t.trim()) {
+          if (typeof t === "string" && t.trim()) {
             tagSet.add(t.trim().toLowerCase());
           }
         });
@@ -567,11 +590,11 @@ export function useNotes() {
   const allFolders = useMemo(() => {
     const folderMap = new Map<string, string>();
     // Always start with General
-    folderMap.set('general', 'General');
+    folderMap.set("general", "General");
 
     // Add persistent folder list
     folderList.forEach((f) => {
-      if (f && typeof f === 'string' && f.trim()) {
+      if (f && typeof f === "string" && f.trim()) {
         const trimmed = f.trim();
         folderMap.set(trimmed.toLowerCase(), trimmed);
       }
@@ -579,7 +602,7 @@ export function useNotes() {
 
     // Add folders from notes
     notes.forEach((n) => {
-      if (n.folder && typeof n.folder === 'string' && n.folder.trim()) {
+      if (n.folder && typeof n.folder === "string" && n.folder.trim()) {
         const trimmed = n.folder.trim();
         const lower = trimmed.toLowerCase();
         if (!folderMap.has(lower)) {
@@ -588,9 +611,9 @@ export function useNotes() {
       }
     });
 
-    const general = folderMap.get('general') || 'General';
+    const general = folderMap.get("general") || "General";
     const rest = Array.from(folderMap.values())
-      .filter((f) => f.toLowerCase() !== 'general')
+      .filter((f) => f.toLowerCase() !== "general")
       .sort((a, b) => a.localeCompare(b));
 
     return [general, ...rest];
@@ -612,27 +635,27 @@ export function useNotes() {
         try {
           localStorage.setItem(FOLDERS_STORAGE_KEY, JSON.stringify(next));
         } catch (e) {
-          console.warn('Failed to save folders list:', e);
+          console.warn("Failed to save folders list:", e);
         }
         return next;
       });
       return true;
     },
-    [allFolders]
+    [allFolders],
   );
 
   // Delete folder & safely migrate notes to 'General'
   const deleteFolder = useCallback(
     async (folderToDelete: string): Promise<number> => {
       const targetLower = folderToDelete.trim().toLowerCase();
-      if (targetLower === 'general') {
+      if (targetLower === "general") {
         // Prevent deleting root fallback folder
         return 0;
       }
 
       // Find affected notes
       const affected = notes.filter(
-        (n) => n.folder && n.folder.trim().toLowerCase() === targetLower
+        (n) => n.folder && n.folder.trim().toLowerCase() === targetLower,
       );
 
       // Reassign affected notes to 'General'
@@ -640,29 +663,29 @@ export function useNotes() {
         setNotes((prevNotes) =>
           prevNotes.map((n) =>
             n.folder.trim().toLowerCase() === targetLower
-              ? { ...n, folder: 'General', updatedAt: Date.now() }
-              : n
-          )
+              ? { ...n, folder: "General", updatedAt: Date.now() }
+              : n,
+          ),
         );
 
         if (user) {
           try {
             await Promise.all(
               affected.map((n) =>
-                updateDoc(doc(db, 'notes', n.id), {
-                  folder: 'General',
+                updateDoc(doc(db, "notes", n.id), {
+                  folder: "General",
                   updatedAt: Date.now(),
-                })
-              )
+                }),
+              ),
             );
           } catch (err) {
-            console.error('Failed to move notes to General in Firestore:', err);
+            console.error("Failed to move notes to General in Firestore:", err);
           }
         } else {
           const updated = notes.map((n) =>
             n.folder.trim().toLowerCase() === targetLower
-              ? { ...n, folder: 'General', updatedAt: Date.now() }
-              : n
+              ? { ...n, folder: "General", updatedAt: Date.now() }
+              : n,
           );
           saveLocalGuestNotes(updated);
         }
@@ -674,7 +697,7 @@ export function useNotes() {
         try {
           localStorage.setItem(FOLDERS_STORAGE_KEY, JSON.stringify(next));
         } catch (e) {
-          console.warn('Failed to save folders after delete:', e);
+          console.warn("Failed to save folders after delete:", e);
         }
         return next;
       });
@@ -682,14 +705,14 @@ export function useNotes() {
       // If active filter was this folder, reset to 'all'
       setFilter((prev) => {
         if (prev.folder.trim().toLowerCase() === targetLower) {
-          return { ...prev, folder: 'all' };
+          return { ...prev, folder: "all" };
         }
         return prev;
       });
 
       return affected.length;
     },
-    [notes, user]
+    [notes, user],
   );
 
   // Parse search query into structured tags, folders, and keyword terms
@@ -702,12 +725,18 @@ export function useNotes() {
     const dedupedList = deduplicateNotes(notes);
     return dedupedList.filter((n) => {
       // Folder filter
-      if (filter.folder !== 'all' && n.folder.toLowerCase() !== filter.folder.toLowerCase()) {
+      if (
+        filter.folder !== "all" &&
+        n.folder.toLowerCase() !== filter.folder.toLowerCase()
+      ) {
         return false;
       }
 
       // Tag filter
-      if (filter.tag && !n.tags.map((t) => t.toLowerCase()).includes(filter.tag.toLowerCase())) {
+      if (
+        filter.tag &&
+        !n.tags.map((t) => t.toLowerCase()).includes(filter.tag.toLowerCase())
+      ) {
         return false;
       }
 
