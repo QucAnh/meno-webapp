@@ -296,15 +296,15 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
               {note.isPinned ? "Pinned" : "Pin"}
             </span>
           </button>
-        </div>
-
-        {/* Center: Live Sync Status */}
-        <div className="flex items-center gap-2">
-          <SyncStatusIndicator
-            status={syncStatus}
-            errorMessage={errorMessage}
-            onRetry={() => onSaveImmediate(note.id)}
-          />
+          
+          {/* Center: Live Sync Status */}
+          <div className="flex items-center gap-2">
+            <SyncStatusIndicator
+              status={syncStatus}
+              errorMessage={errorMessage}
+              onRetry={() => onSaveImmediate(note.id)}
+            />
+          </div>
         </div>
 
         {/* Right: View Mode + Export actions */}

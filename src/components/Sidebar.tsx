@@ -484,52 +484,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* User / Session Footer */}
       <div className="p-3 border-t border-neutral-200 dark:border-neutral-800/80 bg-neutral-50/70 dark:bg-neutral-950/40 shrink-0">
-        {/* Theme Mode Selector Pill */}
+
+      {/* Theme Mode Selector Pill */}
         <div
           id="sidebar-theme-switch-container"
-          className="flex items-center justify-between p-1 mb-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800/90 text-xs text-neutral-700 dark:text-neutral-300 transition-colors"
+          className="relative flex items-center p-0.5 mb-2.5 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800/90 transition-colors"
         >
-          <div className="flex items-center gap-2 pl-2">
-            {isDark ? (
-              <Moon className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
-            ) : (
-              <Sun className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
-            )}
-            <span className="text-[11px] font-medium text-neutral-700 dark:text-neutral-300">
-              Theme
-            </span>
-          </div>
+          {/* Sliding indicator */}
+          <div
+            className={`absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] rounded-md bg-white dark:bg-neutral-800 shadow-sm border border-neutral-200/80 dark:border-neutral-700/60 transition-transform duration-200 ease-out ${
+              isDark ? "translate-x-full" : "translate-x-0"
+            }`}
+          />
 
-          <div className="flex items-center bg-neutral-200/80 dark:bg-neutral-950 p-0.5 rounded-lg border border-neutral-200 dark:border-neutral-800/80 transition-colors">
-            <button
-              id="theme-switch-light-btn"
-              type="button"
-              onClick={() => setTheme("light")}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
-                !isDark
-                  ? "bg-white text-neutral-950 font-semibold shadow-xs border border-neutral-200/80"
-                  : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200"
-              }`}
-              title="Switch to Light Theme"
-            >
-              <Sun className="w-3 h-3 text-amber-500" />
-              <span>Light</span>
-            </button>
-            <button
-              id="theme-switch-dark-btn"
-              type="button"
-              onClick={() => setTheme("dark")}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
-                isDark
-                  ? "bg-neutral-800 text-amber-300 font-semibold shadow-xs border border-neutral-700/60"
-                  : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200"
-              }`}
-              title="Switch to Dark Theme"
-            >
-              <Moon className="w-3 h-3 text-amber-300" />
-              <span>Dark</span>
-            </button>
-          </div>
+          <button
+            id="theme-switch-light-btn"
+            type="button"
+            onClick={() => setTheme("light")}
+            className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[11px] font-medium transition-colors ${
+              !isDark
+                ? "text-neutral-900"
+                : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300"
+            }`}
+            title="Switch to Light Theme"
+          >
+            <Sun className={`w-3 h-3 ${!isDark ? "text-amber-500" : ""}`} />
+            <span>Light</span>
+          </button>
+
+          <button
+            id="theme-switch-dark-btn"
+            type="button"
+            onClick={() => setTheme("dark")}
+            className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[11px] font-medium transition-colors ${
+              isDark
+                ? "text-amber-300"
+                : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300"
+            }`}
+            title="Switch to Dark Theme"
+          >
+            <Moon className={`w-3 h-3 ${isDark ? "text-amber-300" : ""}`} />
+            <span>Dark</span>
+          </button>
         </div>
 
         <button
