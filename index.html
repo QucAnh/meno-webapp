@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MemoFlow — Fast, Minimal Markdown Notes</title>
+    <meta name="description" content="A fast, minimal web note-taking app with real-time Markdown syncing, notebook folders, tags, and auto-save." />
+    <meta property="og:title" content="MemoFlow — Fast, Minimal Markdown Notes" />
+    <meta property="og:description" content="A fast, minimal web note-taking app with real-time Markdown syncing, notebook folders, tags, and auto-save." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script>
+      (function() {
+        try {
+          const stored = localStorage.getItem('memoflow_theme_mode');
+          const isDark = stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body class="bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50 font-sans antialiased selection:bg-amber-200 selection:text-neutral-900">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

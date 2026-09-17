@@ -1,0 +1,6 @@
+{
+  "name": "MemoFlow",
+  "description": "A fast, minimal web note-taking app with real-time Markdown syncing, notebook folders, tags, and auto-save.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
