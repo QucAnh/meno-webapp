@@ -114,29 +114,6 @@ cd memo-webapp
 npm install
 ```
 
-### Firebase Setup
-
-1. Create a project at the [Firebase Console](https://console.firebase.google.com/).
-2. Enable **Authentication** → turn on the **Google** and **Email/Password** sign-in providers.
-3. Create a **Firestore** database (start in production mode).
-4. Enable **Cloud Storage** for media uploads.
-5. In Project Settings, register a new Web App and copy the config values into a `.env.local` file (see below).
-
-### Environment Variables
-
-Create a `.env.local` file in the project root:
-
-```env
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-```
-
-> ⚠️ `.env.local` should never be committed. Make sure it's listed in `.gitignore`.
-
 ### Running Locally
 
 ```bash
@@ -152,82 +129,6 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 ```bash
 npm run build      # Create an optimized production build
 npm run preview    # Preview the production build locally
-```
-
----
-
-## Deploying to Vercel & Troubleshooting `auth/unauthorized-domain`
-
-When deploying to Vercel (e.g. `https://meno-webapp.vercel.app/`), Firebase Authentication requires your deployment domain to be explicitly whitelisted in your Firebase Console.
-
-### 🚨 Fixing `Firebase: Error (auth/unauthorized-domain)`
-
-If you see:
-```text
-Firebase: Error (auth/unauthorized-domain)
-```
-
-This error means Firebase Authentication is blocking sign-in requests because your deployed domain (`meno-webapp.vercel.app`) has not been added to your Firebase project's **Authorized Domains** list.
-
-#### 🔧 Step-by-Step Fix (Takes 30 seconds):
-
-1. **Go to Firebase Console**:
-   Open [Firebase Console Authentication Settings](https://console.firebase.google.com/project/memoflow-50c1f/authentication/settings).
-2. **Open the Settings Tab**:
-   Click **Authentication** in the left sidebar, then click the **Settings** tab at the top.
-3. **Add Authorized Domain**:
-   - Scroll down to the **Authorized domains** card.
-   - Click **Add domain**.
-   - Enter `meno-webapp.vercel.app` (you can also add `*.vercel.app` or any custom domain you connect).
-   - Click **Save**.
-4. **Refresh & Test**:
-   Return to your Vercel deployment at `https://meno-webapp.vercel.app/` and try signing in. Google Sign-In and Email authentication will now work seamlessly!
-
-### 🚨 Fixing `Firebase: Error (auth/operation-not-allowed)`
-
-If you see:
-```text
-Firebase: Error (auth/operation-not-allowed)
-```
-
-This error happens in a new Firebase project because sign-in providers (Google, Email/Password) are **disabled by default**.
-
-#### 🔧 Step-by-Step Fix (Takes 20 seconds):
-1. In your Firebase Console, click **Authentication** in the left sidebar.
-2. Click the **Sign-in method** tab.
-3. To enable **Google Sign-In**:
-   - Click **Google** from the list of providers.
-   - Switch the toggle to **Enable**.
-   - Select your support email (`Tranquocanh200003@gmail.com`).
-   - Click **Save**.
-4. To enable **Email/Password**:
-   - Click **Email/Password**.
-   - Switch the toggle to **Enable**.
-   - Click **Save**.
-5. Return to your app and sign in! Both providers are now activated.
-
-### Vercel Environment Variables (Optional)
-
-If you don't commit `firebase-applet-config.json`, configure these environment variables in your Vercel Project Settings (**Project Settings** → **Environment Variables**):
-
-```env
-VITE_FIREBASE_API_KEY=AIzaSyD_yHMKtYCDvzGbZ7rZftyffS19rBaBzAg
-VITE_FIREBASE_AUTH_DOMAIN=memoflow-50c1f.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=memoflow-50c1f
-VITE_FIREBASE_STORAGE_BUCKET=memoflow-50c1f.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=991167998374
-VITE_FIREBASE_APP_ID=1:991167998374:web:aa7fc1c5a1f826ad0ec767
-VITE_FIREBASE_MEASUREMENT_ID=G-N8NGH6J1G2
-```
-
----
-
-## Security Rules
-
-MemoFlow ships with a `firestore.rules` file enforcing per-user authorization. Deploy it with the Firebase CLI:
-
-```bash
-firebase deploy --only firestore:rules
 ```
 
 ---
