@@ -14,6 +14,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
+  errorCode: string | null;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string) => Promise<void>;
@@ -30,6 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(
@@ -41,6 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       (err) => {
         console.error("Auth state error:", err);
         setError(err.message);
+        setErrorCode((err as any)?.code || null);
         setLoading(false);
       },
     );
@@ -48,72 +51,84 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => unsubscribe();
   }, []);
 
-  const clearError = () => setError(null);
+  const clearError = () => {
+    setError(null);
+    setErrorCode(null);
+  };
+
+  const handleAuthError = (err: any, fallbackMessage: string) => {
+    console.error("Authentication Error:", err);
+    const code = err.code || "";
+    setErrorCode(code);
+
+    if (code === "auth/popup-closed-by-user") {
+      setError("Sign in popup was closed before completing.");
+    } else if (code === "auth/unauthorized-domain") {
+      const hostname = typeof window !== "undefined" ? window.location.hostname : "your domain";
+      setError(
+        `Firebase Error (auth/unauthorized-domain): "${hostname}" is not an authorized domain in your Firebase project.`
+      );
+    } else if (code === "auth/wrong-password" || code === "auth/user-not-found" || code === "auth/invalid-credential") {
+      setError("Invalid email or password.");
+    } else if (code === "auth/email-already-in-use") {
+      setError("This email address is already registered. Please sign in instead.");
+    } else if (code === "auth/weak-password") {
+      setError("Password should be at least 6 characters.");
+    } else if (code === "auth/invalid-email") {
+      setError("Please provide a valid email address.");
+    } else {
+      setError(err.message || fallbackMessage);
+    }
+  };
 
   const signInWithGoogle = async () => {
-    setError(null);
+    clearError();
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err: any) {
-      console.error("Google Sign In Error:", err);
-      // Handle popup blocked or closed
-      if (err.code === "auth/popup-closed-by-user") {
-        setError("Sign in popup was closed before completing.");
-      } else {
-        setError(err.message || "Failed to sign in with Google.");
-      }
+      handleAuthError(err, "Failed to sign in with Google.");
       throw err;
     }
   };
 
   const signInWithEmail = async (email: string, pass: string) => {
-    setError(null);
+    clearError();
     try {
       await signInWithEmailAndPassword(auth, email, pass);
     } catch (err: any) {
-      console.error("Email Sign In Error:", err);
-      setError(err.message || "Invalid email or password.");
+      handleAuthError(err, "Invalid email or password.");
       throw err;
     }
   };
 
   const signUpWithEmail = async (email: string, pass: string) => {
-    setError(null);
+    clearError();
     try {
       await createUserWithEmailAndPassword(auth, email, pass);
     } catch (err: any) {
-      console.error("Email Sign Up Error:", err);
-      setError(err.message || "Failed to create account.");
+      handleAuthError(err, "Failed to create account.");
       throw err;
     }
   };
 
   const signInAsGuest = async () => {
-    setError(null);
+    clearError();
     try {
       await signInAnonymously(auth);
     } catch (err: any) {
       console.warn("Anonymous Sign In note:", err);
-      if (err.code === "auth/admin-restricted-operation") {
-        const msg =
-          "Anonymous authentication is disabled in this Firebase project. Please sign in with Google or Email/Password.";
-        setError(msg);
-        throw new Error(msg);
-      } else {
-        const msg = err.message || "Failed to start guest session.";
-        setError(msg);
-        throw err;
-      }
+      handleAuthError(err, "Failed to start guest session.");
+      throw err;
     }
   };
 
   const logout = async () => {
-    setError(null);
+    clearError();
     try {
       await signOut(auth);
     } catch (err: any) {
       console.error("Sign Out Error:", err);
-      setError(err.message || "Failed to sign out.");
+      handleAuthError(err, "Failed to sign out.");
     }
   };
 
@@ -123,6 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         user,
         loading,
         error,
+        errorCode,
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,

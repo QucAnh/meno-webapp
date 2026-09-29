@@ -5,9 +5,9 @@ import {
   Mail,
   Lock,
   User as UserIcon,
-  Sparkles,
   AlertTriangle,
 } from "lucide-react";
+import { UnauthorizedDomainAlert } from "./UnauthorizedDomainAlert";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -20,9 +20,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
-    signInAsGuest,
     logout,
     error,
+    errorCode,
     clearError,
   } = useAuth();
 
@@ -33,6 +33,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [localError, setLocalError] = useState<string | null>(null);
 
   if (!isOpen) return null;
+
+  const isUnauthorizedDomain =
+    errorCode === "auth/unauthorized-domain" ||
+    (error && error.toLowerCase().includes("unauthorized-domain"));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +62,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       }
       onClose();
     } catch (err: any) {
-      setLocalError(err.message || "Authentication failed");
+      if (err.code !== "auth/unauthorized-domain") {
+        setLocalError(err.message || "Authentication failed");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -72,30 +78,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       await signInWithGoogle();
       onClose();
     } catch (err: any) {
-      setLocalError(err.message || "Google sign in failed");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleGuestSession = async () => {
-    setLocalError(null);
-    clearError();
-    setIsSubmitting(true);
-    try {
-      await signInAsGuest();
-      onClose();
-    } catch (err: any) {
-      if (
-        err.message &&
-        (err.message.includes("Anonymous authentication is disabled") ||
-          err.message.includes("admin-restricted-operation"))
-      ) {
-        setLocalError(
-          "Anonymous authentication is disabled in Firebase for this project. You can continue using the Local Workspace (saved in this browser), or sign in with Google / Email to sync to the cloud.",
-        );
-      } else {
-        setLocalError(err.message || "Guest sign in failed");
+      if (err.code !== "auth/unauthorized-domain") {
+        setLocalError(err.message || "Google sign in failed");
       }
     } finally {
       setIsSubmitting(false);
@@ -110,26 +94,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     >
       <div
         id="auth-modal-dialog"
-        className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-neutral-200 overflow-hidden"
+        className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-2xl shadow-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-850">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-neutral-900 text-amber-400 flex items-center justify-center font-bold text-sm">
+            <div className="w-8 h-8 rounded-lg bg-neutral-900 dark:bg-neutral-100 text-amber-400 dark:text-neutral-950 flex items-center justify-center font-bold text-sm">
               M
             </div>
             <div>
-              <h2 className="text-base font-semibold text-neutral-900">
+              <h2 className="text-base font-semibold text-neutral-900 dark:text-white">
                 {user
                   ? "Account Management"
                   : isSignUp
                     ? "Create MemoFlow Account"
                     : "Sign In to MemoFlow"}
               </h2>
-              <p className="text-xs text-neutral-500">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
                 {user
-                  ? `Signed in as ${user.email || "Anonymous Guest"}`
+                  ? `Signed in as ${user.email || "Account"}`
                   : "Sync notes in real-time across devices"}
               </p>
             </div>
@@ -137,7 +121,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <button
             id="close-auth-modal-btn"
             onClick={onClose}
-            className="p-1 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
+            className="p-1 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -145,8 +129,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
         {/* Content */}
         <div className="p-6">
-          {(error || localError) && (
-            <div className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2">
+          {/* Unauthorized Domain Alert */}
+          {isUnauthorizedDomain && (
+            <div className="mb-4">
+              <UnauthorizedDomainAlert onDismiss={clearError} />
+            </div>
+          )}
+
+          {!isUnauthorizedDomain && (error || localError) && (
+            <div className="mb-4 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
               <span>{localError || error}</span>
             </div>
@@ -155,41 +146,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           {user ? (
             <div className="space-y-4 text-center">
               <div className="w-16 h-16 mx-auto rounded-full bg-amber-100 text-neutral-900 flex items-center justify-center text-xl font-bold">
-                {user.email ? user.email[0].toUpperCase() : "G"}
+                {user.email ? user.email[0].toUpperCase() : "U"}
               </div>
               <div>
-                <p className="text-sm font-medium text-neutral-900">
-                  {user.email || "Guest User (Anonymous)"}
+                <p className="text-sm font-medium text-neutral-900 dark:text-white">
+                  {user.email || "Authenticated User"}
                 </p>
                 <p className="text-xs text-neutral-500 font-mono mt-0.5">
                   UID: {user.uid.slice(0, 12)}...
                 </p>
-                {user.isAnonymous && (
-                  <p className="mt-2 text-xs text-amber-800 bg-amber-50 p-2 rounded-md border border-amber-200">
-                    You are in Guest Mode. Notes are synced to Firestore under
-                    your temporary session. Sign in with Google or Email to bind
-                    notes permanently.
-                  </p>
-                )}
               </div>
               <div className="pt-2 flex flex-col gap-2">
-                {user.isAnonymous && (
-                  <button
-                    id="upgrade-google-btn"
-                    onClick={handleGoogleSignIn}
-                    disabled={isSubmitting}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-neutral-300 text-neutral-800 font-medium text-sm hover:bg-neutral-50 transition-colors"
-                  >
-                    Link with Google Account
-                  </button>
-                )}
                 <button
                   id="sign-out-btn"
                   onClick={async () => {
                     await logout();
                     onClose();
                   }}
-                  className="w-full py-2.5 px-4 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-sm font-medium transition-colors"
+                  className="w-full py-2.5 px-4 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-200 text-sm font-medium transition-colors cursor-pointer"
                 >
                   Sign Out
                 </button>
@@ -203,7 +177,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-neutral-300 bg-white text-neutral-700 font-medium text-sm hover:bg-neutral-50 transition-all shadow-xs"
+                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-medium text-sm hover:bg-neutral-50 dark:hover:bg-neutral-750 transition-all shadow-xs cursor-pointer"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path
@@ -227,17 +201,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               </button>
 
               <div className="flex items-center my-3">
-                <div className="flex-1 border-t border-neutral-200"></div>
+                <div className="flex-1 border-t border-neutral-200 dark:border-neutral-800"></div>
                 <span className="px-3 text-xs text-neutral-400 uppercase tracking-wider">
                   or with email
                 </span>
-                <div className="flex-1 border-t border-neutral-200"></div>
+                <div className="flex-1 border-t border-neutral-200 dark:border-neutral-800"></div>
               </div>
 
               {/* Email Form */}
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
-                  <label className="block text-xs font-medium text-neutral-700 mb-1">
+                  <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                     Email address
                   </label>
                   <div className="relative">
@@ -249,13 +223,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full pl-9 pr-3 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-neutral-900 focus:bg-white transition-all"
+                      className="w-full pl-9 pr-3 py-2 text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white rounded-lg focus:outline-hidden focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-200 transition-all"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-neutral-700 mb-1">
+                  <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                     Password
                   </label>
                   <div className="relative">
@@ -267,7 +241,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full pl-9 pr-3 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-neutral-900 focus:bg-white transition-all"
+                      className="w-full pl-9 pr-3 py-2 text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white rounded-lg focus:outline-hidden focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-200 transition-all"
                     />
                   </div>
                 </div>
@@ -276,7 +250,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   id="submit-auth-form-btn"
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-2.5 px-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium text-sm rounded-xl transition-colors shadow-xs"
+                  className="w-full py-2.5 px-4 bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-900 font-medium text-sm rounded-xl transition-colors shadow-xs cursor-pointer"
                 >
                   {isSubmitting
                     ? "Please wait..."
@@ -286,7 +260,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 </button>
               </form>
 
-              <div className="pt-2 flex items-center justify-between text-xs text-neutral-500">
+              <div className="pt-2 flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
                 <button
                   id="toggle-signup-mode-btn"
                   type="button"
@@ -294,25 +268,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     setIsSignUp(!isSignUp);
                     setLocalError(null);
                   }}
-                  className="hover:text-neutral-900 hover:underline"
+                  className="hover:text-neutral-900 dark:hover:text-white hover:underline cursor-pointer"
                 >
                   {isSignUp
                     ? "Already have an account? Sign in"
                     : "Don't have an account? Sign up"}
-                </button>
-              </div>
-
-              {/* Instant Guest Mode */}
-              <div className="mt-4 pt-4 border-t border-neutral-100">
-                <button
-                  id="guest-session-btn"
-                  type="button"
-                  onClick={handleGuestSession}
-                  disabled={isSubmitting}
-                  className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-neutral-600 bg-neutral-100 hover:bg-neutral-200 text-xs font-medium transition-colors"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                  Try Instant Guest Session (No password required)
                 </button>
               </div>
             </div>
@@ -322,3 +282,4 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     </div>
   );
 };
+

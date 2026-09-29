@@ -6,6 +6,7 @@ import { Sidebar } from "./components/Sidebar";
 import { NotesList } from "./components/NotesList";
 import { EditorSplitView } from "./components/EditorSplitView";
 import { AuthModal } from "./components/AuthModal";
+import { SignInPage } from "./components/SignInPage";
 import {
   ConfirmDeleteModal,
   DeleteTarget,
@@ -323,11 +324,30 @@ function MemoFlowWorkspace() {
   );
 }
 
+function AppRoot() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100">
+        <div className="w-9 h-9 border-3 border-amber-400 border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Loading MemoFlow...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <SignInPage />;
+  }
+
+  return <MemoFlowWorkspace />;
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <MemoFlowWorkspace />
+        <AppRoot />
       </ThemeProvider>
     </AuthProvider>
   );

@@ -156,6 +156,48 @@ npm run preview    # Preview the production build locally
 
 ---
 
+## Deploying to Vercel & Troubleshooting `auth/unauthorized-domain`
+
+When deploying to Vercel (e.g. `https://meno-webapp.vercel.app/`), Firebase Authentication requires your deployment domain to be explicitly whitelisted in your Firebase Console.
+
+### 🚨 Fixing `Firebase: Error (auth/unauthorized-domain)`
+
+If you see:
+```text
+Firebase: Error (auth/unauthorized-domain)
+```
+
+This error means Firebase Authentication is blocking sign-in requests because your deployed domain (`meno-webapp.vercel.app`) has not been added to your Firebase project's **Authorized Domains** list.
+
+#### 🔧 Step-by-Step Fix (Takes 30 seconds):
+
+1. **Go to Firebase Console**:
+   Open [Firebase Console Authentication Settings](https://console.firebase.google.com/project/earnest-entity-dpthm/authentication/settings) (replace with your project ID if using a different one).
+2. **Open the Settings Tab**:
+   Click **Authentication** in the left sidebar, then click the **Settings** tab at the top.
+3. **Add Authorized Domain**:
+   - Scroll down to the **Authorized domains** card.
+   - Click **Add domain**.
+   - Enter `meno-webapp.vercel.app` (you can also add `*.vercel.app` or any custom domain you connect).
+   - Click **Save**.
+4. **Refresh & Test**:
+   Return to your Vercel deployment at `https://meno-webapp.vercel.app/` and try signing in. Google Sign-In and Email authentication will now work seamlessly!
+
+### Vercel Environment Variables (Optional)
+
+If you don't commit `firebase-applet-config.json`, configure these environment variables in your Vercel Project Settings (**Project Settings** → **Environment Variables**):
+
+```env
+VITE_FIREBASE_API_KEY=AIzaSy...
+VITE_FIREBASE_AUTH_DOMAIN=earnest-entity-dpthm.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=earnest-entity-dpthm
+VITE_FIREBASE_STORAGE_BUCKET=earnest-entity-dpthm.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=747004328924
+VITE_FIREBASE_APP_ID=1:747004328924:web:6d7ea73e3eb8da4a0bed19
+```
+
+---
+
 ## Security Rules
 
 MemoFlow ships with a `firestore.rules` file enforcing per-user authorization. Deploy it with the Firebase CLI:
