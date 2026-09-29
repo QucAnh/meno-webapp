@@ -8,6 +8,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { UnauthorizedDomainAlert } from "./UnauthorizedDomainAlert";
+import { OperationNotAllowedAlert } from "./OperationNotAllowedAlert";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -37,6 +38,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const isUnauthorizedDomain =
     errorCode === "auth/unauthorized-domain" ||
     (error && error.toLowerCase().includes("unauthorized-domain"));
+
+  const isOperationNotAllowed =
+    errorCode === "auth/operation-not-allowed" ||
+    (error && error.toLowerCase().includes("operation-not-allowed"));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,7 +141,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {!isUnauthorizedDomain && (error || localError) && (
+          {/* Operation Not Allowed Alert */}
+          {isOperationNotAllowed && (
+            <div className="mb-4">
+              <OperationNotAllowedAlert onDismiss={clearError} />
+            </div>
+          )}
+
+          {!isUnauthorizedDomain && !isOperationNotAllowed && (error || localError) && (
             <div className="mb-4 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
               <span>{localError || error}</span>

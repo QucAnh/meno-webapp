@@ -23,12 +23,14 @@ export const projectId = firebaseConfig.projectId;
 export const app =
   getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// Initialize Firestore with specific databaseId if provided
+// Initialize Firestore with specific databaseId if provided (for custom named databases)
 export const firestoreDatabaseId =
   configJson.firestoreDatabaseId || "(default)";
-export const db = configJson.firestoreDatabaseId
-  ? getFirestore(app, configJson.firestoreDatabaseId)
-  : getFirestore(app);
+export const db =
+  configJson.firestoreDatabaseId &&
+  configJson.firestoreDatabaseId !== "(default)"
+    ? getFirestore(app, configJson.firestoreDatabaseId)
+    : getFirestore(app);
 
 // Initialize Authentication and Providers
 export const auth = getAuth(app);

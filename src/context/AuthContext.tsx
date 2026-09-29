@@ -68,6 +68,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setError(
         `Firebase Error (auth/unauthorized-domain): "${hostname}" is not an authorized domain in your Firebase project.`
       );
+    } else if (code === "auth/operation-not-allowed") {
+      setError(
+        "Provider not enabled: Google or Email/Password authentication is disabled in your Firebase project. Go to Firebase Console > Authentication > Sign-in method to enable it."
+      );
     } else if (code === "auth/wrong-password" || code === "auth/user-not-found" || code === "auth/invalid-credential") {
       setError("Invalid email or password.");
     } else if (code === "auth/email-already-in-use") {
