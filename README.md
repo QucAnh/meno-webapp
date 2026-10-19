@@ -108,6 +108,7 @@ meno-webapp/
 │   ├── hooks/useNotes.ts              # all note state, sync, folders, search
 │   ├── test/factories.ts              # shared test fixtures
 │   ├── types/note.ts
+│   ├── assets/MEMO.png                # app mark, imported by the sidebar
 │   ├── utils/
 │   │   ├── folders.ts                 # folder list rules (tested)
 │   │   ├── migration.ts               # local notes → account migration (tested)
