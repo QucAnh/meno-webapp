@@ -30,6 +30,20 @@ html.dark body {
   color: #f5f5f5;
 }
 
+/* Text selection, one source of truth for both themes.
+   Dark mode needs its own foreground colour: the light rule's near-black text
+   on a dark selection was unreadable. */
+::selection {
+  background-color: #fde68a;
+  color: #171717;
+}
+
+.dark ::selection,
+.dark::selection {
+  background-color: #f59e0b;
+  color: #171717;
+}
+
 /* Custom subtle scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;

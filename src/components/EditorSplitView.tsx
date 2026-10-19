@@ -602,7 +602,7 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
               value={localContent}
               onChange={(e) => handleContentChange(e.target.value)}
               placeholder="Write Markdown here... Use headers (#), lists (-), quotes (>), or code (```)..."
-              className="flex-1 p-6 text-sm font-mono leading-relaxed resize-none outline-hidden border-none text-neutral-800 dark:text-neutral-100 bg-white dark:bg-neutral-900 selection:bg-amber-100 dark:selection:bg-amber-900/50 placeholder:text-neutral-300 dark:placeholder:text-neutral-600 overflow-y-auto custom-scrollbar"
+              className="flex-1 p-6 text-sm font-mono leading-relaxed resize-none outline-hidden border-none text-neutral-800 dark:text-neutral-100 bg-white dark:bg-neutral-900 placeholder:text-neutral-300 dark:placeholder:text-neutral-600 overflow-y-auto custom-scrollbar"
               spellCheck={false}
             />
           </div>
