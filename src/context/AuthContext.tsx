@@ -5,7 +5,6 @@ import {
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInAnonymously,
   signOut,
 } from "firebase/auth";
 import { auth, googleProvider } from "../firebaseConfig";
@@ -18,7 +17,6 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string) => Promise<void>;
-  signInAsGuest: () => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -115,17 +113,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const signInAsGuest = async () => {
-    clearError();
-    try {
-      await signInAnonymously(auth);
-    } catch (err: any) {
-      console.warn("Anonymous Sign In note:", err);
-      handleAuthError(err, "Failed to start guest session.");
-      throw err;
-    }
-  };
-
   const logout = async () => {
     clearError();
     try {
@@ -146,7 +133,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,
-        signInAsGuest,
         logout,
         clearError,
       }}

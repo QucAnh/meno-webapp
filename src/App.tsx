@@ -324,8 +324,45 @@ function MemoFlowWorkspace() {
   );
 }
 
+// Persisted marker for the account-less, browser-local workspace.
+const GUEST_MODE_STORAGE_KEY = "memoflow_guest_mode";
+
+function readGuestMode(): boolean {
+  try {
+    return localStorage.getItem(GUEST_MODE_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writeGuestMode(enabled: boolean): void {
+  try {
+    if (enabled) {
+      localStorage.setItem(GUEST_MODE_STORAGE_KEY, "true");
+    } else {
+      localStorage.removeItem(GUEST_MODE_STORAGE_KEY);
+    }
+  } catch {
+    // Storage unavailable (private browsing): the workspace still works for this session.
+  }
+}
+
 function AppRoot() {
   const { user, loading } = useAuth();
+  const [isGuestMode, setIsGuestMode] = useState<boolean>(readGuestMode);
+
+  // A real session supersedes the local workspace, so signing out leads back to sign-in.
+  useEffect(() => {
+    if (user && isGuestMode) {
+      writeGuestMode(false);
+      setIsGuestMode(false);
+    }
+  }, [user, isGuestMode]);
+
+  const handleContinueAsGuest = useCallback(() => {
+    writeGuestMode(true);
+    setIsGuestMode(true);
+  }, []);
 
   if (loading) {
     return (
@@ -336,8 +373,8 @@ function AppRoot() {
     );
   }
 
-  if (!user) {
-    return <SignInPage />;
+  if (!user && !isGuestMode) {
+    return <SignInPage onContinueAsGuest={handleContinueAsGuest} />;
   }
 
   return <MemoFlowWorkspace />;

@@ -5,7 +5,12 @@ import { Mail, Lock, Eye, EyeOff, Sparkles, AlertCircle, Sun, Moon, CheckCircle2
 import { UnauthorizedDomainAlert } from "./UnauthorizedDomainAlert";
 import { OperationNotAllowedAlert } from "./OperationNotAllowedAlert";
 
-export const SignInPage: React.FC = () => {
+interface SignInPageProps {
+  /** Enters the offline, browser-local workspace without creating an account. */
+  onContinueAsGuest: () => void;
+}
+
+export const SignInPage: React.FC<SignInPageProps> = ({ onContinueAsGuest }) => {
   const {
     signInWithGoogle,
     signInWithEmail,
@@ -272,6 +277,22 @@ export const SignInPage: React.FC = () => {
                   ? "Already have an account? Sign In"
                   : "Don't have an account? Create one"}
               </button>
+            </div>
+
+            {/* Guest entry: browser-local workspace, no account required */}
+            <div className="pt-4 mt-1 border-t border-neutral-200 dark:border-neutral-800 space-y-2">
+              <button
+                id="continue-as-guest-btn"
+                type="button"
+                onClick={onContinueAsGuest}
+                className="w-full py-2.5 px-4 rounded-xl border border-dashed border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 font-medium text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800/70 transition-all cursor-pointer"
+              >
+                Continue without an account
+              </button>
+              <p className="text-center text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                Notes are kept in this browser. Sign in later to move them to
+                your account.
+              </p>
             </div>
           </div>
 

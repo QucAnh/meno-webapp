@@ -543,18 +543,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <div className="min-w-0">
               <div className="text-xs font-medium text-neutral-800 dark:text-white truncate">
-                {user?.email
-                  ? user.email
-                  : user?.isAnonymous
-                    ? "Guest User"
-                    : "Local Workspace"}
+                {user?.email ? user.email : "Local Workspace"}
               </div>
               <div className="text-[10px] text-neutral-500 dark:text-neutral-400 truncate">
                 {user
-                  ? user.isAnonymous
-                    ? "Temporary session"
-                    : "Cloud synchronized"
-                  : "Sign in to sync cloud"}
+                  ? "Cloud synchronized"
+                  : "Browser only — sign in to sync"}
               </div>
             </div>
           </div>
