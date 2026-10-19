@@ -1,159 +1,181 @@
 # MemoFlow
 
-**A fast, real-time knowledge and study management workspace — notes, tasks, subjects, and spaced-repetition flashcards, all synced live.**
-
-Built with React, TypeScript, and Firebase, MemoFlow keeps your study workflow in one place: write Markdown notes with live preview, organize them by subject and tag, track tasks alongside your notes, and review flashcards on a spaced-repetition schedule — online or offline.
+**A fast, minimal Markdown note workspace with live Firestore sync — or a browser-local workspace when you would rather not sign in.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
-[![Made with Vite](https://img.shields.io/badge/built%20with-Vite-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)
+[![React 19](https://img.shields.io/badge/React-19-087EA4?logo=react&logoColor=white)](https://react.dev)
+[![Vite](https://img.shields.io/badge/built%20with-Vite-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)
 [![Firebase](https://img.shields.io/badge/backend-Firebase-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
 
----
-
-## Table of Contents
-
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Firebase Setup](#firebase-setup)
-  - [Environment Variables](#environment-variables)
-  - [Running Locally](#running-locally)
-- [Building for Production](#building-for-production)
-- [Security Rules](#security-rules)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [License](#license)
+Live app: **https://meno-webapp.vercel.app**
 
 ---
 
 ## Features
 
-| Category                | What you get                                                                                       |
-| ----------------------- | -------------------------------------------------------------------------------------------------- |
-| 📝 **Notes**            | Split-pane Markdown editor with live preview, debounced auto-save, and inline media uploads        |
-| 🔄 **Real-Time Sync**   | Changes save straight to Firestore, with offline support and `Saving…` / `Saved` status indicators |
-| 🗂️ **Organization**     | Nested folder trees, subjects, tags, pinned notes, and full-text search                            |
-| 🧠 **Flashcards & SRS** | Deck-based flashcards with a spaced-repetition scheduler for review sessions                       |
-| ✅ **Tasks**            | To-do lists linked directly to notes and study subjects                                            |
-| ⚡ **Command Palette**  | Keyboard-driven quick search and navigation across your workspace                                  |
-| 🎨 **Customization**    | Multiple themes and UI preferences                                                                 |
-| 📤 **Export**           | Export your workspace to Markdown, JSON, or PDF                                                    |
-| 🛡️ **Admin Dashboard**  | Role-based access control, user management, system metrics, and storage tracking                   |
+Everything below is implemented in this repository.
+
+| Area | What you get |
+| --- | --- |
+| Markdown editor | Source pane and rendered GitHub-Flavored Markdown preview side by side, driven by `marked` |
+| View modes | Split, editor-only, or preview-only; auto-switches to editor-only below 768 px |
+| Formatting toolbar | Bold, italic, strikethrough, H1–H3, quote, inline code, code block, bullet / numbered / task list, link, table |
+| Auto-save | 500 ms debounce on title and content, 200 ms on folder and tags, `⌘/Ctrl+S` to save immediately |
+| Sync status | `Saving…` / `Saved` / `Offline` / `Error` indicator, with an offline banner |
+| Organization | Flat folders (five defaults plus your own), tags, pinned notes, filter chips |
+| Search | Keyword, `#tag`, `tag:`, `folder:`, `@folder`, `keyword:#tag`, quoted phrases; match highlighting and centered excerpts |
+| Per-note stats | Word count, character count, estimated read time, last-updated time |
+| Output | Copy raw Markdown to the clipboard, download the note as `.md` |
+| Theme | Light and dark, persisted, following the system preference on first visit |
+| Responsive | Mobile drawer navigation, collapsible sidebar, auto-adjusting editor layout |
+| Accounts | Google sign-in, email/password sign-in and sign-up, or an account-less local workspace |
+
+### Keyboard shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| `⌘/Ctrl+N` | New note |
+| `⌘/Ctrl+S` | Save the active note immediately |
+| `⌘/Ctrl+\` | Collapse or expand the sidebar |
+| `Enter` | Add a tag in the tag field |
 
 ---
 
-## Tech Stack
+## How it works
 
-- **Frontend:** React + TypeScript, bundled with Vite
-- **Styling & Icons:** Tailwind CSS, Lucide Icons
-- **State Management:** Zustand
-- **Auth:** Firebase Authentication (Google OAuth + Email/Password)
-- **Database:** Firebase Firestore (v10+ Modular SDK)
-- **File Storage:** Firebase Cloud Storage
+**Two working modes, one data layer.** `src/hooks/useNotes.ts` owns every read and write. When a user is signed in, notes live in the Firestore `notes` collection and arrive through a real-time `onSnapshot` listener. When the user chooses the account-less workspace, the same hook reads and writes `localStorage` instead. Components never talk to Firebase directly.
+
+**Optimistic saves.** Edits update React state first so typing never waits on the network, then a debounced write commits to Firestore with `setDoc(..., { merge: true })`. See `src/hooks/useNotes.ts`.
+
+**Guest notes follow you in.** On the first sign-in, the local workspace's notes are migrated to the new account, and the local copy is deleted only after every write commits. If a write fails, the notes stay in the browser and the migration retries on the next sign-in. That ordering guarantee lives in `src/utils/migration.ts`, where the Firestore write and the cleanup are injected — which is what makes it testable without a database.
+
+**Note shape.** `src/types/note.ts`:
+
+```ts
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  tags: string[];
+  folder: string;
+  isPinned: boolean;
+  updatedAt: number;
+  createdAt: number;
+  userId: string;
+}
+```
+
+**Access control.** `firestore.rules` restricts every note to its owner:
+
+```
+match /notes/{noteId} {
+  allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+  allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+}
+```
 
 ---
 
-## Project Structure
+## Tech stack
+
+- **React 19** + **TypeScript**, bundled by **Vite 6**
+- **Tailwind CSS 4** (via `@tailwindcss/vite`) and **lucide-react** icons
+- **marked** for GitHub-Flavored Markdown rendering
+- **Firebase 12** modular SDK — Authentication and Firestore (no Storage, no Cloud Functions)
+- **No state library.** State is React hooks plus two context providers (`AuthContext`, `ThemeContext`)
+
+---
+
+## Project structure
 
 ```text
-memo-webapp/
+meno-webapp/
 ├── src/
-│   ├── components/            # UI components
-│   │   ├── AuthModal.tsx
+│   ├── components/
+│   │   ├── AuthModal.tsx              # in-workspace sign in / sign out
 │   │   ├── ConfirmDeleteModal.tsx
-│   │   ├── EditorSplitView.tsx
-│   │   ├── MarkdownRenderer.tsx
-│   │   ├── NotesList.tsx
-│   │   ├── Sidebar.tsx
-│   │   └── SyncStatusIndicator.tsx
-│   ├── context/                # Auth and Theme context providers
+│   │   ├── EditorSplitView.tsx        # editor, preview, toolbar, stats
+│   │   ├── MarkdownRenderer.tsx       # marked → HTML
+│   │   ├── NotesList.tsx              # list, search bar, filter chips
+│   │   ├── OperationNotAllowedAlert.tsx
+│   │   ├── Sidebar.tsx                # folders, tags, theme switch, account footer
+│   │   ├── SignInPage.tsx             # signed-out screen, guest entry
+│   │   ├── SyncStatusIndicator.tsx
+│   │   └── UnauthorizedDomainAlert.tsx
+│   ├── context/
 │   │   ├── AuthContext.tsx
 │   │   └── ThemeContext.tsx
-│   ├── hooks/                  # Custom React hooks
-│   │   └── useNotes.ts
-│   ├── types/                  # TypeScript interfaces
-│   │   └── note.ts
-│   ├── utils/                  # Helper utilities
+│   ├── hooks/useNotes.ts              # all note state, sync, folders, search
+│   ├── test/factories.ts              # shared test fixtures
+│   ├── types/note.ts
+│   ├── utils/
+│   │   ├── folders.ts                 # folder list rules (tested)
+│   │   ├── migration.ts               # local notes → account migration (tested)
+│   │   ├── notes.ts                   # dedupe, sort, filter (tested)
 │   │   ├── folderStyles.ts
 │   │   └── searchUtils.tsx
-│   ├── App.tsx                 # Main application router and layout
-│   ├── firebaseConfig.ts       # Firebase initialization
-│   ├── index.css               # Global styles
-│   ├── main.tsx                # Application entry point
-│   └── vite-env.d.ts
-├── bun.lock
-├── firebase-applet-config.json
-├── firestore.rules             # Firestore security rules
-├── index.html                  # HTML template
-├── metadata.json
-├── package.json
-├── tsconfig.json                # TypeScript configuration
-├── vite.config.ts               # Vite bundler configuration
-└── .gitignore
+│   ├── App.tsx                        # layout, routing between the three screens
+│   ├── firebaseConfig.ts
+│   ├── index.css
+│   └── main.tsx
+├── .github/workflows/check.yml     # install, type check and tests on push
+├── firebase-applet-config.json        # Firebase client config (public by design)
+├── firestore.rules
+└── index.html
 ```
 
 ---
 
-## Getting Started
+## Getting started
 
-### Prerequisites
-
-- **Node.js** `v18.0.0` or higher
-- **npm**, **pnpm**, or **yarn**
-- A **Firebase project** with **Authentication**, **Firestore**, and **Storage** enabled
-
-### Installation
+Requires Node.js 18 or newer.
 
 ```bash
-git clone https://github.com/your-username/memo-webapp.git
-cd memo-webapp
 npm install
+npm run dev      # http://localhost:3000
 ```
 
-### Running Locally
+`bun install && bun run dev` works too.
 
-```bash
-npm run dev
-```
+### Firebase setup
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+The app expects a Firebase project with Authentication and Firestore:
+
+1. Enable the **Google** and **Email/Password** sign-in providers in Firebase Console → Authentication → Sign-in method.
+2. Create a Firestore database and publish the rules in `firestore.rules`.
+3. Add your deployment hostname under Authentication → Settings → Authorized domains. A missing entry produces `auth/unauthorized-domain`, which the app reports with a dedicated alert.
+4. Point the app at your project by editing `firebase-applet-config.json`, or by setting the `VITE_FIREBASE_*` variables — `src/firebaseConfig.ts` reads the environment first, then falls back to the JSON file.
+
+### Commands
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Dev server on port 3000 |
+| `npm run build` | Production build into `dist/` |
+| `npm run preview` | Serve the production build |
+| `npm run lint` | `tsc --noEmit` type check |
+| `npm run test` | Vitest unit tests |
 
 ---
 
-## Building for Production
+## Known limitations
 
-```bash
-npm run build      # Create an optimized production build
-npm run preview    # Preview the production build locally
-```
-
----
-
-## Roadmap
-
-- [x] **Phase 1 — Core Study Engine (V1):** Markdown editor with live preview & auto-save · subject/tag taxonomy · interactive flashcards · Firebase Auth & Firestore sync
-- [ ] **Phase 2 — Task Management & Review Algorithms:** Spaced repetition scheduling · linked task lists · global command palette
-- [ ] **Phase 3 — Media & Advanced Customization:** Inline image/asset uploads · extended themes · workspace export (Markdown/JSON/PDF)
-- [ ] **Phase 4 — Analytics & Admin Controls:** Admin dashboard with roles & metrics · study analytics (review heatmaps, time-per-subject)
+- **Test coverage is limited to the pure logic.** Vitest covers note de-duplication and sorting, the filter rules, folder-list rules, the search-query parser, and the local-notes migration. React components and the Firestore wiring have no automated coverage; the migration is verified through injected write and cleanup functions rather than a live database.
+- **Offline support is in-memory for signed-in users.** The Firestore client is created without persistent caching (`src/firebaseConfig.ts`), so queued writes survive a network drop but not a page reload. The offline banner's promise that edits are "safely stored locally" holds only for the account-less workspace, which uses `localStorage`.
+- **The account-less workspace is tied to one browser.** Clearing site data deletes those notes. Signing in migrates them to the account and then clears the local copy.
+- **Folders do not nest.** They are a flat, case-insensitive list; deleting a folder moves its notes to `General`.
+- **Search is client-side** over the notes already loaded in the browser, not a Firestore query.
+- **The bundle is one ~1 MB chunk.** No code splitting.
+- **Duplicate guard is heuristic.** Notes are de-duplicated by id, and near-identical notes by a title+content+folder signature, which also collapses repeated copies of the welcome template.
 
 ---
 
-## Contributing
+## Possible future work
 
-Contributions are welcome! To propose a change:
-
-1. Fork the repo and create a feature branch (`git checkout -b feature/my-feature`)
-2. Commit your changes with clear messages
-3. Push to your fork and open a Pull Request
-
-Please open an issue first for large changes so we can discuss the approach.
+Not committed to: spaced-repetition flashcards, tasks linked to notes, a command palette, richer export (JSON/PDF), and study analytics. The current focus is making the note workspace itself solid.
 
 ---
 
 ## License
 
-Distributed under the **MIT License**. See [`LICENSE`](./LICENSE) for details.
+MIT — see [`LICENSE`](./LICENSE).
