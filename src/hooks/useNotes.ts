@@ -12,9 +12,18 @@ import {
 import { db } from "../firebaseConfig";
 import { Note, SyncStatus, NoteFilter } from "../types/note";
 import { useAuth } from "../context/AuthContext";
-import { parseSearchQuery, matchesSearchQuery } from "../utils/searchUtils";
+import { parseSearchQuery } from "../utils/searchUtils";
+import { deduplicateNotes, filterNotes, sortNotes } from "../utils/notes";
+import {
+  DEFAULT_FOLDERS,
+  addFolderToList,
+  buildFolderList,
+  hasFolder,
+  removeFolderFromList,
+  selectNotesInFolder,
+} from "../utils/folders";
+import { migrateLocalNotes } from "../utils/migration";
 
-const DEFAULT_FOLDERS = ["General", "Study", "Work", "Ideas", "Projects"];
 const LOCAL_STORAGE_KEY = "memoflow_local_notes_v1";
 const FOLDERS_STORAGE_KEY = "memoflow_custom_folders_v1";
 
@@ -73,40 +82,6 @@ Happy writing!`,
   createdAt: Date.now(),
   updatedAt: Date.now(),
 };
-
-// Helper: deduplicate notes array strictly by unique note.id and eliminate duplicate twin notes
-function deduplicateNotes(list: Note[]): Note[] {
-  const seenIds = new Set<string>();
-  const seenSignatures = new Set<string>();
-  const result: Note[] = [];
-
-  for (const n of list) {
-    if (!n || !n.id || seenIds.has(n.id)) {
-      continue;
-    }
-    seenIds.add(n.id);
-
-    // Filter out duplicate default welcome notes or identical twin notes
-    const isWelcome =
-      n.title === "Welcome to MemoFlow" || n.id.startsWith("local_welcome_");
-    const signature = `${(n.title || "").trim()}:::${(n.content || "").trim()}:::${(n.folder || "General").trim()}`;
-
-    if (isWelcome) {
-      if (seenSignatures.has("welcome_note_signature")) {
-        continue;
-      }
-      seenSignatures.add("welcome_note_signature");
-    } else if (signature.length > 10) {
-      if (seenSignatures.has(signature)) {
-        continue;
-      }
-      seenSignatures.add(signature);
-    }
-
-    result.push(n);
-  }
-  return result;
-}
 
 // Helper: load guest notes from localStorage
 function getLocalGuestNotes(): Note[] {
@@ -224,39 +199,38 @@ export function useNotes() {
     setLoading(true);
     setError(null);
 
-    // If there were local guest notes, migrate them to Firestore once
+    // If there were local guest notes, migrate them to Firestore once.
+    // The local copy is cleared only after every write succeeds, so a failed
+    // migration keeps the notes in the browser for the next sign-in.
     const migrateGuestNotes = async () => {
       if (isMigratingRef.current) return;
+
+      const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (!raw) return;
+
+      isMigratingRef.current = true;
+      const notesCol = collection(db, "notes");
+
       try {
-        const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (raw) {
-          // Immediately remove to prevent repeat migrations
-          localStorage.removeItem(LOCAL_STORAGE_KEY);
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            isMigratingRef.current = true;
-            for (const note of parsed) {
-              // Avoid migrating default welcome templates if user is already registered
-              const isDefaultWelcome =
-                note.id?.startsWith("local_welcome_") ||
-                note.title === "Welcome to MemoFlow";
-              if (isDefaultWelcome) {
-                continue;
-              }
-              const notesCol = collection(db, "notes");
-              const newRef = doc(notesCol);
-              const migratedNote: Note = {
-                ...note,
-                id: newRef.id,
-                userId: user.uid,
-                updatedAt: Date.now(),
-              };
-              await setDoc(newRef, migratedNote);
-            }
-          }
+        const result = await migrateLocalNotes({
+          raw,
+          writeNote: (note) => {
+            const newRef = doc(notesCol); // unique ID
+            return setDoc(newRef, {
+              ...note,
+              id: newRef.id,
+              userId: user.uid,
+              updatedAt: Date.now(),
+            });
+          },
+          removeLocalCopy: () => localStorage.removeItem(LOCAL_STORAGE_KEY),
+        });
+
+        if (result.keptLocalCopy) {
+          setError(
+            "Some notes from your local workspace could not be synced yet. They are still stored in this browser and will retry on your next sign-in.",
+          );
         }
-      } catch (migrationErr) {
-        console.warn("Guest notes migration note:", migrationErr);
       } finally {
         isMigratingRef.current = false;
       }
@@ -294,15 +268,8 @@ export function useNotes() {
           });
         });
 
-        // Sort: Pinned first, then updatedAt descending
-        fetchedNotes.sort((a, b) => {
-          if (a.isPinned !== b.isPinned) {
-            return a.isPinned ? -1 : 1;
-          }
-          return b.updatedAt - a.updatedAt;
-        });
-
-        const deduped = deduplicateNotes(fetchedNotes);
+        // Pinned first, then most recently updated, then collapse duplicates
+        const deduped = deduplicateNotes(sortNotes(fetchedNotes));
         setNotes(deduped);
         setLoading(false);
 
@@ -586,52 +553,22 @@ export function useNotes() {
     return Array.from(tagSet).sort();
   }, [notes]);
 
-  // Aggregate folders with General guaranteed first, user's folders, plus notes folders
-  const allFolders = useMemo(() => {
-    const folderMap = new Map<string, string>();
-    // Always start with General
-    folderMap.set("general", "General");
-
-    // Add persistent folder list
-    folderList.forEach((f) => {
-      if (f && typeof f === "string" && f.trim()) {
-        const trimmed = f.trim();
-        folderMap.set(trimmed.toLowerCase(), trimmed);
-      }
-    });
-
-    // Add folders from notes
-    notes.forEach((n) => {
-      if (n.folder && typeof n.folder === "string" && n.folder.trim()) {
-        const trimmed = n.folder.trim();
-        const lower = trimmed.toLowerCase();
-        if (!folderMap.has(lower)) {
-          folderMap.set(lower, trimmed);
-        }
-      }
-    });
-
-    const general = folderMap.get("general") || "General";
-    const rest = Array.from(folderMap.values())
-      .filter((f) => f.toLowerCase() !== "general")
-      .sort((a, b) => a.localeCompare(b));
-
-    return [general, ...rest];
-  }, [folderList, notes]);
+  // Aggregate folders: General first, then stored folders and folders in use
+  const allFolders = useMemo(
+    () => buildFolderList(folderList, notes),
+    [folderList, notes],
+  );
 
   // Add custom folder
   const addFolder = useCallback(
     (folderName: string): boolean => {
       const trimmed = folderName.trim();
-      if (!trimmed) return false;
-
-      const lower = trimmed.toLowerCase();
-      if (allFolders.some((f) => f.toLowerCase() === lower)) {
+      if (!trimmed || hasFolder(allFolders, trimmed)) {
         return false;
       }
 
       setFolderList((prev) => {
-        const next = [...prev, trimmed];
+        const next = addFolderToList(prev, trimmed);
         try {
           localStorage.setItem(FOLDERS_STORAGE_KEY, JSON.stringify(next));
         } catch (e) {
@@ -654,9 +591,7 @@ export function useNotes() {
       }
 
       // Find affected notes
-      const affected = notes.filter(
-        (n) => n.folder && n.folder.trim().toLowerCase() === targetLower,
-      );
+      const affected = selectNotesInFolder(notes, folderToDelete);
 
       // Reassign affected notes to 'General'
       if (affected.length > 0) {
@@ -693,7 +628,7 @@ export function useNotes() {
 
       // Remove from folderList
       setFolderList((prev) => {
-        const next = prev.filter((f) => f.trim().toLowerCase() !== targetLower);
+        const next = removeFolderFromList(prev, folderToDelete);
         try {
           localStorage.setItem(FOLDERS_STORAGE_KEY, JSON.stringify(next));
         } catch (e) {
@@ -720,41 +655,11 @@ export function useNotes() {
     return parseSearchQuery(filter.searchQuery);
   }, [filter.searchQuery]);
 
-  // Filtered notes according to folder, tags, pinned status, search query with strict deduplication
-  const filteredNotes = useMemo(() => {
-    const dedupedList = deduplicateNotes(notes);
-    return dedupedList.filter((n) => {
-      // Folder filter
-      if (
-        filter.folder !== "all" &&
-        n.folder.toLowerCase() !== filter.folder.toLowerCase()
-      ) {
-        return false;
-      }
-
-      // Tag filter
-      if (
-        filter.tag &&
-        !n.tags.map((t) => t.toLowerCase()).includes(filter.tag.toLowerCase())
-      ) {
-        return false;
-      }
-
-      // Only pinned filter
-      if (filter.onlyPinned && !n.isPinned) {
-        return false;
-      }
-
-      // Advanced search query filter (supports keyword, #tags, keyword:#tags, tag:name, folder:name)
-      if (parsedSearch.raw) {
-        if (!matchesSearchQuery(n, parsedSearch)) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [notes, filter.folder, filter.tag, filter.onlyPinned, parsedSearch]);
+  // Filtered notes: folder, tag, pin and search filters applied
+  const filteredNotes = useMemo(
+    () => filterNotes(notes, filter, parsedSearch),
+    [notes, filter, parsedSearch],
+  );
 
   // Active note object
   const activeNote = useMemo(() => {
